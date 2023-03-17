@@ -4,8 +4,11 @@ p_load(rio,
        tidyverse,
        tidylog,
        ###
+       broom,
+       broom.mixed,
        glue,
        janitor,
+       lme4,
        renv,
        sjlabelled)
 

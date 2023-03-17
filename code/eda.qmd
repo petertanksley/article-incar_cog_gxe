@@ -1,0 +1,32 @@
+---
+title: "Exploratory data analysis of the HRS cohort"
+format: pdf
+editor: visual
+author: "Peter T. Tanksley, Ph.D."
+---
+
+### Exploratory analysis of the analytic sample
+
+```{r}
+library(pacman)
+p_load(rio,
+       tidyverse)
+
+hrs_merged <- import("hrs_merged.rds")
+
+#create analytic sample
+hrs <- hrs_merged %>% 
+  filter(as_numeric(dod_yr) >= 2012 | is.na(dod_yr)) %>% #remove cases deceased prior to 2012
+  select(hhidpn, 
+         study, race_ethn, sex, birthyr, year,
+         cogfunction,
+         ad_pgs, starts_with("pc"),
+         incar_ever,
+         stroke_ever,
+         apoe_info99_4ct,
+         social_origins,
+         ses) %>% 
+  drop_na()
+```
+
+Let's see what years we're working with.
