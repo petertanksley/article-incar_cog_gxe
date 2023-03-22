@@ -17,5 +17,6 @@ interaction <- formula("as.numeric(cog_2cat) ~ incar_ever*scale(ad_pgs) +
 m1 <- glmer(main_effects, data = hrs, family = poisson(link="log"))
 m2 <- glmer(interaction, data = hrs, family = poisson(link="log"))
 
-tidy(m1) %>% view()
-tidy(m2) %>% view()
+
+
+
