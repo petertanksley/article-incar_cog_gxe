@@ -26,12 +26,20 @@ hrs <- hrs_merged %>%
 
 hrs_recodes <- hrs %>% 
   mutate(age = year-birthyr) %>% 
-  mutate(cog_2cat = case_when((cogfunction=="normal") ~ "normal",
-                              (cogfunction %in% c("cind", "demented")) ~ "impaired",
+  mutate(cog_2cat = case_when((cogfunction=="normal") ~ 0,
+                              (cogfunction %in% c("cind", "demented")) ~ 1,
                               # (cogfunction=="demented") ~ "demented",
-                              TRUE ~ NA_character_),
-         cog_2cat = fct_relevel(cog_2cat, "normal", "impaired")) %>% 
+                              TRUE ~ NA_real_)) %>% 
   drop_na()
+  
+pgs_resid <- lm(ad_pgs ~ pc1_5a + pc1_5b + pc1_5c + pc1_5d + pc1_5e + 
+                  pc6_10a + pc6_10b + pc6_10c + pc6_10d + pc6_10e, data = hrs_recodes) %>% 
+  augment() %>% 
+  select(ad_pgs_resid = .std.resid)
+
+hrs_final <- bind_cols(hrs_recodes, pgs_resid) %>% 
+  select(-starts_with("pc"))
+
 
 # #check case count
 # hrs_recodes %>% count(cases = n_distinct(hhidpn))
@@ -39,5 +47,5 @@ hrs_recodes <- hrs %>%
 #  4392 34492
 
 #export analytic dataframe
-export(hrs_recodes, "hrs_analytic.rds")
+export(hrs_final, "hrs_analytic.rds")
 

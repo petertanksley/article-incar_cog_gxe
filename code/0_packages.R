@@ -6,6 +6,8 @@ p_load(rio,
        ###
        broom,
        broom.mixed,
+       corrr,
+       flextable,
        glue,
        gt,
        gtsummary,

@@ -1,22 +1,60 @@
 source("0_packages.R")
 
-hrs <- import("hrs_analytic.rds")
+hrs <- import("hrs_analytic.rds") 
 
-main_effects <- formula("as.numeric(cog_2cat) ~ incar_ever + scale(ad_pgs) + 
-                   sex + age + social_origins + stroke_ever + apoe_info99_4ct + 
-                   pc1_5a + pc1_5b + pc1_5c + pc1_5d + pc1_5e + 
-                   pc6_10a + pc6_10b + pc6_10c + pc6_10d + pc6_10e + 
+#=Main analysis================================================================
+
+#set model formulas 
+m1_pgs <- formula("cog_2cat ~ scale(ad_pgs_resid) + 
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+m2_apoe <- formula("cog_2cat ~ factor(apoe_info99_4ct) +
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+m3_pgs_apoe <- formula("cog_2cat ~ scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+m4_incar <- formula("cog_2cat ~ factor(incar_ever) + 
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+m5_main_eff <- formula("cog_2cat ~ factor(incar_ever) + scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+m6_int_incar_pgs <- formula("cog_2cat ~ factor(incar_ever)*scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+m7_int_incar_apoe <- formula("cog_2cat ~ scale(ad_pgs_resid) + factor(incar_ever)*factor(apoe_info99_4ct) +
+                   factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
 
-interaction <- formula("as.numeric(cog_2cat) ~ incar_ever*scale(ad_pgs) +
-                   sex + age + social_origins + stroke_ever + apoe_info99_4ct +
-                   pc1_5a + pc1_5b + pc1_5c + pc1_5d + pc1_5e + 
-                   pc6_10a + pc6_10b + pc6_10c + pc6_10d + pc6_10e + 
-                   (1|hhidpn)")
+#run models 
+m1 <- glmer(m1_pgs,            data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m2 <- glmer(m2_apoe,           data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m3 <- glmer(m3_pgs_apoe,       data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m4 <- glmer(m4_incar,          data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m5 <- glmer(m5_main_eff,       data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m6 <- glmer(m6_int_incar_pgs,  data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m7 <- glmer(m7_int_incar_apoe, data=hrs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
-m1 <- glmer(main_effects, data = hrs, family = poisson(link="log"))
-m2 <- glmer(interaction, data = hrs, family = poisson(link="log"))
+#table models
+res_1 <- tidy(m1, exponentiate=TRUE) %>% mutate(model="model 1") %>% mutate(glance(m1))
+res_2 <- tidy(m2, exponentiate=TRUE) %>% mutate(model="model 2") %>% mutate(glance(m2))
+res_3 <- tidy(m3, exponentiate=TRUE) %>% mutate(model="model 3") %>% mutate(glance(m3))
+res_4 <- tidy(m4, exponentiate=TRUE) %>% mutate(model="model 4") %>% mutate(glance(m4))
+res_5 <- tidy(m5, exponentiate=TRUE) %>% mutate(model="model 5") %>% mutate(glance(m5))
+res_6 <- tidy(m6, exponentiate=TRUE) %>% mutate(model="model 6") %>% mutate(glance(m6))
+res_7 <- tidy(m7, exponentiate=TRUE) %>% mutate(model="model 7") %>% mutate(glance(m7))
 
+main_results <- bind_rows(res_1,
+                          res_2,
+                          res_3,
+                          res_4,
+                          res_5,
+                          res_6,
+                          res_7)
 
+#export results
+export(main_results, "../output/results/tab3_main_results.csv")
 
+#=END==========================================================================
 

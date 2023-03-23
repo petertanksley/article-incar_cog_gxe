@@ -41,8 +41,11 @@ table_1 <- hrs_analytic %>%
   modify_header(label ~ "**Variable**") %>% 
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**")
 
-#export
-gtsave(as_gt(table_1), "../output/results/tab1_descriptives.html")
+#export .html table
+# gtsave(as_gt(table_1), "../output/results/tab1_descriptives.html")
 
-
+#export .docx table
+table_1 %>% 
+  as_flex_table() %>%
+  flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
 
