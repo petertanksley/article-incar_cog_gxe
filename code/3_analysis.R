@@ -5,25 +5,25 @@ hrs <- import("hrs_analytic.rds")
 #=Main analysis================================================================
 
 #set model formulas 
-m1_pgs <- formula("cog_2cat ~ scale(ad_pgs_resid) + 
+m1_pgs <- formula("cog_2cat_num ~ scale(ad_pgs_resid) + 
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
-m2_apoe <- formula("cog_2cat ~ factor(apoe_info99_4ct) +
+m2_apoe <- formula("cog_2cat_num ~ factor(apoe_info99_4ct) +
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
-m3_pgs_apoe <- formula("cog_2cat ~ scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
+m3_pgs_apoe <- formula("cog_2cat_num ~ scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
-m4_incar <- formula("cog_2cat ~ factor(incar_ever) + 
+m4_incar <- formula("cog_2cat_num ~ factor(incar_ever) + 
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
-m5_main_eff <- formula("cog_2cat ~ factor(incar_ever) + scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
+m5_main_eff <- formula("cog_2cat_num ~ factor(incar_ever) + scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
-m6_int_incar_pgs <- formula("cog_2cat ~ factor(incar_ever)*scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
+m6_int_incar_pgs <- formula("cog_2cat_num ~ factor(incar_ever)*scale(ad_pgs_resid) + factor(apoe_info99_4ct) +
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
-m7_int_incar_apoe <- formula("cog_2cat ~ scale(ad_pgs_resid) + factor(incar_ever)*factor(apoe_info99_4ct) +
+m7_int_incar_apoe <- formula("cog_2cat_num ~ scale(ad_pgs_resid) + factor(incar_ever)*factor(apoe_info99_4ct) +
                    factor(sex) + scale(age) + scale(social_origins) + factor(stroke_ever) + factor(study) +
                    (1|hhidpn)")
 

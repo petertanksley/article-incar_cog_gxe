@@ -26,9 +26,11 @@ hrs <- hrs_merged %>%
 
 hrs_recodes <- hrs %>% 
   mutate(age = year-birthyr) %>% 
-  mutate(cog_2cat = case_when((cogfunction=="normal") ~ 0,
+  mutate(cog_2cat = case_when((cogfunction=="normal") ~ "Normal",
+                                  (cogfunction %in% c("cind", "demented")) ~ "Impaired",
+                                  TRUE ~ NA_character_),
+         cog_2cat_num = case_when((cogfunction=="normal") ~ 0,
                               (cogfunction %in% c("cind", "demented")) ~ 1,
-                              # (cogfunction=="demented") ~ "demented",
                               TRUE ~ NA_real_)) %>% 
   drop_na()
   

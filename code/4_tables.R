@@ -1,17 +1,17 @@
 source("0_packages.R")
 
-hrs_analytic <- import("hrs_analytic.rds")
+hrs <- import("hrs_analytic.rds")
 
 #get case/observation numbers
 cases <- n_distinct(hrs_analytic$hhidpn)
 obs <- nrow(hrs_analytic)
 
 #generate descriptives table
-table_1 <- hrs_analytic %>% 
+table_1 <- hrs %>% 
   select(study, 
          sex, 
          age,
-         cogfunction,
+         cog_2cat,
          ad_pgs, 
          incar_ever, 
          stroke_ever,
@@ -21,7 +21,7 @@ table_1 <- hrs_analytic %>%
   var_labels(study           = "HRS cohort", 
              sex             = "Self-reported sex", 
              age             = "Age",
-             cogfunction     = "Cognitive function",
+             cog_2cat        = "Cognitive function",
              ad_pgs          = "AD polygenic score", 
              incar_ever      = "Lifetime incarceration", 
              stroke_ever     = "History of stroke",
@@ -40,6 +40,7 @@ table_1 <- hrs_analytic %>%
                       Observations={format(obs, big.mark=",")}; Cases={format(cases, big.mark=",")}')) %>% 
   modify_header(label ~ "**Variable**") %>% 
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**")
+table_1
 
 #export .html table
 # gtsave(as_gt(table_1), "../output/results/tab1_descriptives.html")
