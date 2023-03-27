@@ -2,6 +2,11 @@ source("0_packages.R")
 
 hrs <- import("hrs_analytic.rds")
 
+#set table theme
+set_gtsummary_theme(theme_gtsummary_compact())
+
+#=Table 1 - Descriptives=======================================================
+
 #get case/observation numbers
 cases <- n_distinct(hrs_analytic$hhidpn)
 obs <- nrow(hrs_analytic)
@@ -49,4 +54,64 @@ table_1
 table_1 %>% 
   as_flex_table() %>%
   flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
+
+#=Table 2 - Additional table===================================================
+#=Table 3 - Main results=======================================================
+
+main_results <- import_list("../output/results/tab3_main_results.rdata") 
+list2env(main_results, .GlobalEnv)
+rm(main_results)
+
+tab31 <- tbl_regression(m1, exponentiate=TRUE, 
+                        include=c("scale(ad_pgs_resid)"),
+                        label=c("scale(ad_pgs_resid)"="AD PGS (z-score)"))
+tab32 <- tbl_regression(m2, exponentiate=TRUE, include=c("factor(apoe_info99_4ct)"),
+                        label=c("factor(apoe_info99_4ct)"="APOE-4 allele count"))
+tab33 <- tbl_regression(m3, exponentiate=TRUE, include=c("scale(ad_pgs_resid)", "factor(apoe_info99_4ct)"),
+                        label=list("scale(ad_pgs_resid)"="AD PGS (z-score)",
+                                   "factor(apoe_info99_4ct)"="APOE-4 allele count"))
+tab34 <- tbl_regression(m4, exponentiate=TRUE, include=c("factor(incar_ever)"),
+                        label=c("factor(incar_ever)"="Lifetime incarceration"))
+tab35 <- tbl_regression(m5, exponentiate=TRUE, include=c("factor(incar_ever)","scale(ad_pgs_resid)", "factor(apoe_info99_4ct)"),
+                        label=list("scale(ad_pgs_resid)"="AD PGS (z-score)",
+                                   "factor(apoe_info99_4ct)"="APOE-4 allele count",
+                                   "factor(incar_ever)"="Lifetime incarceration"))
+tab36 <- tbl_regression(m6, exponentiate=TRUE, include=c("factor(incar_ever)","scale(ad_pgs_resid)","factor(apoe_info99_4ct)",
+                                                         "factor(incar_ever):factor(apoe_info99_4ct)",
+                                                         "factor(incar_ever):scale(ad_pgs_resid)"),
+                        label=list("scale(ad_pgs_resid)"="AD PGS (z-score)",
+                                   "factor(apoe_info99_4ct)"="APOE-4 allele count",
+                                   "factor(incar_ever)"="Lifetime incarceration",
+                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count",
+                                   "factor(incar_ever):scale(ad_pgs_resid)"="Lifetime Incarceration*AD PGS (z-score)"))
+
+tab3_mods <- list(tab31,
+                  tab32,
+                  tab33,
+                  tab34,
+                  tab35,
+                  tab36)
+#write function to update gtsumamry tables
+tab_updates <- function(x){
+  x %>% 
+    add_significance_stars(hide_ci = FALSE, hide_p = TRUE, hide_se = TRUE) %>% 
+    remove_row_type(type = "reference")
+    # modify_column_merge(pattern = "{estimate} ({ci})", rows = !is.na(estimate)) 
+}
+
+tab1_mods_update <- lapply(tab3_mods, tab_updates)
+
+tab3_all <- tbl_merge(tab1_mods_update, tab_spanner = paste("Model", seq(1,6,1), sep = " ")) %>% 
+  modify_header(label = "**Variable**") %>% 
+  modify_caption("**Table 3**. Mixed effect Poisson regression of cognitive status on genetic factors and lifetime incarceration")
+tab3_all
+
+tab3_all %>% 
+  as_gt() %>% 
+  gtsave("../output/results/tab3_main_res.html")
+
+tab3_all %>% 
+  as_flex_table() %>%
+  flextable::save_as_docx(path="../output/results/tab3_main_res.docx")
+
 
