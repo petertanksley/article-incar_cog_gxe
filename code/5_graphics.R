@@ -1,5 +1,4 @@
 source("0_packages.R")
-set.seed(973101) #hint: Star Trek: Voyager
 
 hrs <- import("hrs_analytic.rds")
 
