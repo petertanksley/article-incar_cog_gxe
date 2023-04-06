@@ -3,9 +3,8 @@ source("0_packages.R")
 hrs_merged <- import("hrs_merged.rds")
 
 #create analytic sample
-hrs <- hrs_merged %>% 
-  filter(as_numeric(dod_yr) >= 2012 | is.na(dod_yr)) %>% #remove cases deceased prior to 2012
-  select(hhidpn, 
+hrs <- hrs_merged_studyvars_sparse %>% 
+  select(hhidpn,
          study, race_ethn, sex, birthyr, year,
          cogfunction,
          ad_pgs, starts_with("pc"),
@@ -13,13 +12,15 @@ hrs <- hrs_merged %>%
          stroke_ever,
          apoe_info99_4ct,
          social_origins,
-         ses) %>% 
-  drop_na()
+         edu_yrs
+         ) %>%
+  drop_na() #removed 220,366 rows (87%), 34,254 rows remaining
+  
 
 # #check case count
 # hrs %>% count(cases = n_distinct(hhidpn))
 # # cases     n
-# #  4392 34492
+# #  4368 34254
 
 #=Recodes======================================================================
 # age, two category version of cogfunction 
@@ -46,7 +47,7 @@ hrs_final <- bind_cols(hrs_recodes, pgs_resid) %>%
 # #check case count
 # hrs_recodes %>% count(cases = n_distinct(hhidpn))
 # cases     n
-#  4392 34492
+#  4368 34254
 
 #export analytic dataframe
 export(hrs_final, "hrs_analytic.rds")

@@ -16,7 +16,8 @@ p_load(rio,
        janitor,
        lme4,
        renv,
-       sjlabelled)
+       sjlabelled,
+       webshot2)
 
 # renv::init()
 renv::snapshot()
