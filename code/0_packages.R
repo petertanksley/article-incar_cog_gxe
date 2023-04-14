@@ -15,6 +15,7 @@ p_load(rio,
        gtsummary,
        janitor,
        lme4,
+       purrr,
        renv,
        sjlabelled,
        webshot2)
