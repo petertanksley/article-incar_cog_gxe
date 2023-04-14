@@ -1,6 +1,6 @@
 source("0_packages.R")
 
-hrs <- import("hrs_analytic.rds")
+hrs <- import("hrs_full_analytic.rds")
 
 #set table theme
 set_gtsummary_theme(theme_gtsummary_compact())
@@ -16,8 +16,9 @@ table_1 <- hrs %>%
   select(study, 
          sex, 
          age,
+         race_ethn,
          cog_2cat,
-         ad_pgs, 
+         # ad_pgs_resid, 
          incar_ever, 
          stroke_ever,
          apoe_info99_4ct,
@@ -26,9 +27,10 @@ table_1 <- hrs %>%
          ) %>% 
   var_labels(study           = "HRS cohort", 
              sex             = "Self-reported sex", 
+             race_ethn       = "Race/Ethnicity",
              age             = "Age",
              cog_2cat        = "Cognitive function",
-             ad_pgs          = "AD polygenic score", 
+             # ad_pgs          = "AD polygenic score", 
              incar_ever      = "Lifetime incarceration", 
              stroke_ever     = "History of stroke",
              apoe_info99_4ct = "APOE-4 count",
@@ -38,7 +40,7 @@ table_1 <- hrs %>%
   mutate(incar_ever = fct_recode(incar_ever, 
                                  "Yes" = "Incarcerated", 
                                  "No" = "Not Incarcerated")) %>% 
-  mutate(study = fct_drop(study)) %>% 
+  mutate(study = fct_drop(study)) %>%
   mutate(social_origins = as_numeric(social_origins)) %>% 
   tbl_summary(by=incar_ever) %>% 
   add_p() %>% 
@@ -63,6 +65,15 @@ table_1 %>%
 main_results <- import_list("../output/results/tab3_main_results.rdata") 
 list2env(main_results, .GlobalEnv)
 rm(main_results)
+
+#function to calculate delta r2
+delta_r2 <- function(model, base=m0){
+  r2_0 <- r2(m0) %>% unlist()
+  r2_plus1 <- r2(model) %>% unlist()
+  delta_r2 <- r2_plus1[2] - r2_0[2]
+  print(delta_r2)
+}
+
 
 tab31 <- tbl_regression(m1, exponentiate=TRUE, 
                         include=c("scale(ad_pgs_resid)"),

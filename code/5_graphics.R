@@ -1,10 +1,29 @@
 source("0_packages.R")
 
-hrs <- import("hrs_analytic.rds")
+hrs <- import("hrs_full_analytic.rds")
 
 theme_set(theme_classic())
 
-#age x incarceration
+#=venn: race, sex, incar, apoe=================================================
+
+p_load(ggalluvial)
+
+hrs %>% 
+  distinct(hhidpn, .keep_all=TRUE) %>% 
+  # arrange(incar_ever) %>% 
+  ggplot(aes(axis4=race_ethn, axis3=fct_rev(sex), axis1=fct_rev(incar_ever), axis2=fct_rev(apoe_info99_4ct))) +
+  geom_alluvium(aes(fill=incar_ever, alpha=incar_ever)) +
+  geom_stratum() +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+  theme(legend.position = "bottom") +
+  scale_fill_manual(name = "",
+                    values = c("grey90", "red")) +
+  scale_alpha_manual(values = c(1, .8)) +
+  scale_x_discrete(limits = c("Incarcerated", "APOE-4 Count", "Sex", "Race/Ethnicity")) +
+  guides(alpha="none")
+  # coord_polar()
+
+#=age x incarceration==========================================================
 
 age_mean <- mean(hrs$age)
 
@@ -24,7 +43,7 @@ incar_age <- ggplot(hrs, aes(incar_ever, y=age, col=incar_ever)) +
 ggsave("../output/figures/1_incar_age.png", height = 5, width = 7)
 
 
-#cognitive function by year, by cohort
+#=cognitive function by year, by cohort========================================
 cog_apoe4 <- hrs %>% 
   mutate(study = fct_recode(study,
                             "AHEAD\n<1924" = "AHEAD",
