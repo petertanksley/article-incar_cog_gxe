@@ -1,5 +1,7 @@
 if(system.file(package="pacman")=="") utils::install.packages("pacman")
 library(pacman)
+
+# p_load_gh(c("zabore/condsurv","zabore/ezfun"))
 p_load(rio,
        tidyverse,
        tidylog,
@@ -15,10 +17,17 @@ p_load(rio,
        gtsummary,
        janitor,
        lme4,
+       patchwork,
        purrr,
        renv,
        sjlabelled,
-       webshot2)
+       webshot2,
+       #survival packages
+       condsurv,
+       ezfun,
+       survival,
+       survminer,
+       tidycmprsk)
 
 # renv::init()
 renv::snapshot()

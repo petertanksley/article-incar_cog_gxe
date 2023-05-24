@@ -19,10 +19,11 @@ rm(pgs_eur, pgs_afr)
 #CVs: demographics; APOE status; history of stroke; social origins; educational attainment; income
 demo     <- import(glue("{hrs_clean_dir}demographics/demo_cleaned.rds"))           
 apoe     <- import(glue("{hrs_clean_dir}serotonin_apoe/serotonin_apoe_clean.rds")) 
-stroke   <- import(glue("{hrs_clean_dir}stroke/stroke_clean.rds"))                 
+stroke   <- import(glue("{hrs_clean_dir}stroke/stroke_clean.rds"))   
+smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds"))
 soc_orig <- import(glue("{hrs_clean_dir}social_origins/social_origin_clean.rds"))  
 # ses      <- import(glue("{hrs_clean_dir}ses/ses_clean.rds"))
-# edu      <- import(glue("{hrs_clean_dir}education/edu_clean.rds")) %>% distinct(hhidpn, edu_yrs)           
+edu      <- import(glue("{hrs_clean_dir}education/edu_tracker_clean.rds"))
 # income   <- import(glue("{hrs_clean_dir}income/income_clean.rds"))    
 death    <- import(glue("{hrs_clean_dir}death/death_clean.rds"))
 
@@ -43,12 +44,12 @@ id_fct <- function(x) {
 }
 
 #longitudinal dataframes: convert year to numeric
-dfs_years <- list(cog_stat, stroke, death #income, ses
+dfs_years <- list(cog_stat, stroke, death, smoke
                   ) %>% 
   lapply(., year_num)
 
 #all dataframes: convert id for factor
-dfs_ids <- c(dfs_years, list(incar, pgs, demo, apoe, soc_orig #edu
+dfs_ids <- c(dfs_years, list(incar, pgs, demo, apoe, soc_orig, edu
                              )) %>% 
   lapply(., id_fct)
 
@@ -72,23 +73,24 @@ hrs_merged_studyvars <- hrs_merged %>%
          apoe_info99_4ct,
          social_origins,
          # ses,
-         # edu_yrs, 
+         smoke_ever,
+         edu_yrs,
          # income_hh,
          ad_pgs, starts_with(c("pc1_5", "pc6_10"))) %>% 
   # filter(race_ethn %in% c("White", "Black")) %>% 
   filter(firstiw<=year) %>% #removed 446,112 rows (46%), 526,267 rows remaining
   filter(as_numeric(dod_yr)>=year | is.na(dod_yr)) %>% #removed 118,886 rows (23%), 407,381 rows remaining
-  filter(as_numeric(dod_yr)>2012 | is.na(dod_yr)) %>% #removed 88,183 rows (22%), 319,198 rows remaining
-  select(-firstiw)
+  filter(as_numeric(dod_yr)>2012 | is.na(dod_yr))  #removed 88,183 rows (22%), 319,198 rows remaining
+  # select(-firstiw)
 #drop rows with missing on all columns (ignore time-stable variables)
 var_list <- c("ad_pgs",
               "cogfunction",
               "incar_ever", "incar_time_3cat",
-              "stroke_ever",
+              "stroke_ever", "smoke_ever",
               "apoe_info99_4ct")
 
 hrs_merged_studyvars_sparse <- hrs_merged_studyvars %>% 
-  filter(!if_all(all_of(var_list), is.na)) #removed 64,324 rows (20%), 254,874 rows remaining
+  filter(!if_all(all_of(var_list), is.na)) #removed 59,562 rows (19%), 259,636 rows remaining
 
 #export final merged dataframe
 export(hrs_merged_studyvars_sparse, "hrs_merged.rds")

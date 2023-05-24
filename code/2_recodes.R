@@ -17,6 +17,8 @@ hrs_recodes <- hrs_merged %>%
          cog_2cat_num = case_when((cogfunction=="normal") ~ 0,
                                   (cogfunction %in% c("cind", "demented")) ~ 1,
                                   TRUE ~ NA_real_)) %>% 
+  mutate(edu = ifelse(edu_yrs>=12, "hs or more", "less than hs"),
+         edu = fct_relevel(edu, "hs or more", "less than hs")) %>% 
   filter(!study %in% c("HRS", "LBB"))
 
 #==============================================================================
@@ -26,42 +28,44 @@ hrs_recodes <- hrs_merged %>%
 #analytic sample with PGS
 hrs_pgs <- hrs_recodes %>% 
   select(hhidpn,
-         study, race_ethn, sex, birthyr, year, age,
+         study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
          starts_with("cog_2cat"),cogfunction,
          ad_pgs, starts_with("pc"),
          incar_ever, incar_time_3cat,
          stroke_ever,
          apoe_info99_4ct,
          social_origins,
-         # edu_yrs
+         edu_yrs, edu,
+         smoke_ever
   ) %>%
-  drop_na() #removed 80,293 rows (66%), 41,364 rows remaining
+  drop_na(-dod_yr) #removed 77,604 rows (63%), 44,906 rows remaining
 
 
 # #check case count
 # hrs_pgs %>% count(cases = n_distinct(hhidpn))
 # # cases     n
-# #  5502 41364
+# #  5468 44906
 
 #create analytic sample
 hrs_full <- hrs_recodes %>% 
   select(hhidpn,
-         study, race_ethn, sex, birthyr, year, age,
+         study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
          starts_with("cog_2cat"), cogfunction,
          # ad_pgs, starts_with("pc"),
          incar_ever, incar_time_3cat,
          stroke_ever,
          apoe_info99_4ct,
          social_origins,
-         # edu_yrs
+         edu_yrs, edu,
+         smoke_ever
   ) %>%
-  drop_na() #removed 70,891 rows (58%), 50,766 rows remaining
+  drop_na(-dod_yr) #removed 67,165 rows (55%), 55,345 rows remaining
 
 
 # #check case count
-# hrs %>% count(cases = n_distinct(hhidpn))
+# hrs_full %>% count(cases = n_distinct(hhidpn))
 # # cases     n
-# #  6998 50776
+# #  6949 55345
 
 #=PGS - Recodes======================================================================
 # residualize for PCs 1-10 BY RACE
@@ -74,6 +78,6 @@ hrs_pgs_resid <- hrs_pgs %>%
   select(-starts_with("pc"))
 
 #export analytic dataframes
-export(hrs_pgs_resid, "hrs_pgs_analytic.rds")
-export(hrs_full, "hrs_full_analytic.rds")
+rio::export(hrs_pgs_resid, "hrs_pgs_analytic.rds")
+rio::export(hrs_full, "hrs_full_analytic.rds")
 

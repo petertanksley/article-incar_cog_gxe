@@ -17,10 +17,12 @@ table_1 <- hrs %>%
          sex, 
          age,
          race_ethn,
+         edu,
          cog_2cat,
          # ad_pgs_resid, 
          incar_ever, 
          stroke_ever,
+         smoke_ever,
          apoe_info99_4ct,
          social_origins,
          # ses
@@ -28,11 +30,13 @@ table_1 <- hrs %>%
   var_labels(study           = "HRS cohort", 
              sex             = "Self-reported sex", 
              race_ethn       = "Race/Ethnicity",
+             edu             = "HS completion",
              age             = "Age",
              cog_2cat        = "Cognitive function",
              # ad_pgs          = "AD polygenic score", 
              incar_ever      = "Lifetime incarceration", 
              stroke_ever     = "History of stroke",
+             smoke_ever      = "Smoking status",
              apoe_info99_4ct = "APOE-4 count",
              social_origins  = "Social origins index",
              # ses             = "Socioecnomic status"
@@ -52,14 +56,30 @@ table_1 <- hrs %>%
 table_1
 
 #export .html table
-# gtsave(as_gt(table_1), "../output/results/tab1_descriptives.html")
+gtsave(as_gt(table_1), "../output/results/tab1_descriptives.html")
 
-#export .docx table
-table_1 %>% 
-  as_flex_table() %>%
-  flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
+# #export .docx table
+# table_1 %>% 
+#   as_flex_table() %>%
+#   flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
 
-#=Table 2 - Additional table===================================================
+# #=Table 2 - Cross-tab of stratification variable===============================
+# 
+# strat_race <- table(hrs$cog_2cat,
+#       hrs$incar_ever,
+#       hrs$race_ethn)
+# plot(strat_race)
+# 
+# strat_sex <- table(hrs$cog_2cat,
+#                     hrs$incar_ever,
+#                     hrs$sex)
+# plot(strat_sex)
+# 
+# strat_edu <- table(hrs$cog_2cat,
+#                     hrs$incar_ever,
+#                     hrs$edu) 
+# plot(strat_edu)
+# 
 #=Table 3 - Main results=======================================================
 
 main_results <- import_list("../output/results/tab3_main_results.rdata") 
@@ -75,40 +95,27 @@ delta_r2 <- function(model, base=m0){
 }
 
 
-tab31 <- tbl_regression(m1, exponentiate=TRUE, 
-                        include=c("scale(ad_pgs_resid)"),
-                        label=c("scale(ad_pgs_resid)"="AD PGS (z-score)"))
-tab32 <- tbl_regression(m2, exponentiate=TRUE, 
+tab31 <- tbl_regression(m11, exponentiate=TRUE, 
                         include=c("factor(apoe_info99_4ct)"),
                         label=c("factor(apoe_info99_4ct)"="APOE-4 allele count"))
-tab33 <- tbl_regression(m3, exponentiate=TRUE, 
-                        include=c("scale(ad_pgs_resid)", "factor(apoe_info99_4ct)"),
-                        label=list("scale(ad_pgs_resid)"="AD PGS (z-score)",
-                                   "factor(apoe_info99_4ct)"="APOE-4 allele count"))
-tab34 <- tbl_regression(m4, exponentiate=TRUE, 
+tab32 <- tbl_regression(m12, exponentiate=TRUE, 
                         include=c("factor(incar_ever)"),
                         label=c("factor(incar_ever)"="Lifetime incarceration"))
-tab35 <- tbl_regression(m5, exponentiate=TRUE, 
-                        include=c("factor(incar_ever)","scale(ad_pgs_resid)", "factor(apoe_info99_4ct)"),
-                        label=list("scale(ad_pgs_resid)"="AD PGS (z-score)",
-                                   "factor(apoe_info99_4ct)"="APOE-4 allele count",
+tab33 <- tbl_regression(m13, exponentiate=TRUE, 
+                        include=c("factor(incar_ever)","factor(apoe_info99_4ct)"),
+                        label=list("factor(apoe_info99_4ct)"="APOE-4 allele count",
                                    "factor(incar_ever)"="Lifetime incarceration"))
-tab36 <- tbl_regression(m6, exponentiate=TRUE, 
-                        include=c("factor(incar_ever)","scale(ad_pgs_resid)","factor(apoe_info99_4ct)",
-                                                         "factor(incar_ever):factor(apoe_info99_4ct)",
-                                                         "factor(incar_ever):scale(ad_pgs_resid)"),
-                        label=list("scale(ad_pgs_resid)"="AD PGS (z-score)",
-                                   "factor(apoe_info99_4ct)"="APOE-4 allele count",
+tab34 <- tbl_regression(m14, exponentiate=TRUE, 
+                        include=c("factor(incar_ever)","factor(apoe_info99_4ct)",
+                                                         "factor(incar_ever):factor(apoe_info99_4ct)"),
+                        label=list("factor(apoe_info99_4ct)"="APOE-4 allele count",
                                    "factor(incar_ever)"="Lifetime incarceration",
-                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count",
-                                   "factor(incar_ever):scale(ad_pgs_resid)"="Lifetime Incarceration*AD PGS (z-score)"))
+                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count"))
 
 tab3_mods <- list(tab31,
                   tab32,
                   tab33,
-                  tab34,
-                  tab35,
-                  tab36)
+                  tab34)
 #write function to update gtsumamry tables
 tab_updates <- function(x){
   x %>% 
@@ -120,18 +127,18 @@ tab_updates <- function(x){
 
 tab1_mods_update <- lapply(tab3_mods, tab_updates)
 
-tab3_all <- tbl_merge(tab1_mods_update, tab_spanner = paste("Model", 1:6, sep = " ")) %>% 
+tab3_all <- tbl_merge(tab1_mods_update, tab_spanner = paste("Model", 1:4, sep = " ")) %>% 
   modify_header(label = "**Variable**") %>% 
-  modify_caption(glue('**Table 3**. Mixed effect Poisson regression of cognitive status on genetic factors and lifetime incarceration (Observations={format(obs, big.mark=",")}; Cases={format(cases, big.mark=",")})')) %>% 
-  modify_footnote(label ~ "All models also adjusted for age, sex, smoking history, stroke history, and social origins index.") 
+  modify_caption(glue('**Table 3**. Mixed effect Poisson regression of cognitive status on APOE-4 genotype and lifetime incarceration (Observations={format(obs, big.mark=",")}; Cases={format(cases, big.mark=",")})')) %>% 
+  modify_footnote(label ~ "All models also adjusted for age, sex, race/ethnicity, high school completion, smoking history, stroke history, and social origins index.") 
 tab3_all
 
 tab3_all %>% 
   as_gt() %>% 
   gtsave("../output/results/tab3_main_res.html")
 
-tab3_all %>% 
-  as_flex_table() %>%
-  flextable::save_as_docx(path="../output/results/tab3_main_res.docx")
+# tab3_all %>% 
+#   as_flex_table() %>%
+#   flextable::save_as_docx(path="../output/results/tab3_main_res.docx")
 
 

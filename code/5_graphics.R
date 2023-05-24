@@ -88,4 +88,71 @@ cog_apoe4
 ggsave("../output/figures/2_cogstat_apoe4.png", height = 7, width = 10)
 
 
+#=contingency tables===========================================================
 
+p_load(ggvenn,
+       magick,
+       plotly,
+       vtree,
+       webshot2)
+
+# strat_race <- table(#hrs$cog_2cat,
+#                     hrs$incar_ever,
+#                     hrs$apoe_info99_4ct,
+#                     hrs$race_ethn) %>% 
+#   as.data.frame()
+# 
+# 
+# strat_sex <- table(#hrs$cog_2cat,
+#                    hrs$incar_ever,
+#                    hrs$apoe_info99_4ct,
+#                    hrs$sex) %>% 
+#   as.data.frame()
+# 
+# strat_edu <- table(#hrs$cog_2cat,
+#                    hrs$incar_ever,
+#                    hrs$apoe_info99_4ct,
+#                    hrs$edu) %>% 
+#   as.data.frame() 
+
+strat_none <- vtree(hrs, vars = "incar_ever apoe_info99_4ct",
+      sameline = TRUE, showlegend = TRUE,
+      labelvar = c(#cog_2cat="Cognitive Status",
+                   incar_ever="Lifetime\nincarceration",
+                   apoe_info99_4ct="APOE-4 genotype"))
+strat_race <- vtree(hrs, vars = "incar_ever  apoe_info99_4ct race_ethn",
+      sameline = TRUE, showlegend = TRUE,
+      labelvar = c(#cog_2cat="Cognitive Status", 
+                   incar_ever="Lifetime\nincarceration",
+                   apoe_info99_4ct="APOE-4 genotype",
+                   race_ethn="Race/ethnicity"))
+strat_sex <- vtree(hrs, vars = "cog_2cat incar_ever apoe_info99_4ct sex",
+      sameline = TRUE, showlegend = TRUE,
+      labelvar = c(cog_2cat="Cognitive Status", 
+                   incar_ever="Lifetime\nincarceration",
+                   apoe_info99_4ct="APOE-4 genotype",
+                   sex="Sex"))
+strat_edu <- vtree(hrs, vars = "cog_2cat incar_ever apoe_info99_4ct edu",
+      sameline = TRUE, showlegend = TRUE,
+      labelvar = c(cog_2cat="Cognitive Status", 
+                   incar_ever="Lifetime\nincarceration",
+                   apoe_info99_4ct="APOE-4 genotype",
+                   edu="Educational\nattainment"))
+
+
+htmlwidgets::saveWidget(strat_none, "../output/figures/3_strat_none.html") 
+webshot("../output/figures/3_strat_none.html", "../output/figures/3_strat_none.png")
+
+htmlwidgets::saveWidget(strat_race, "../output/figures/3_strat_race.html") 
+webshot("../output/figures/3_strat_race.html", "../output/figures/3_strat_race.png")
+
+htmlwidgets::saveWidget(strat_sex, "../output/figures/3_strat_sex.html") 
+webshot("../output/figures/3_strat_sex.html", "../output/figures/3_strat_sex.png")
+
+htmlwidgets::saveWidget(strat_edu, "../output/figures/3_strat_edu.html") 
+webshot("../output/figures/3_strat_edu.html", "../output/figures/3_strat_edu.png")
+
+magick::image_read("../output/figures/3_strat_none.png") %>% image_trim() %>% image_write("../output/figures/3_strat_none.png")
+magick::image_read("../output/figures/3_strat_race.png") %>% image_trim() %>% image_write("../output/figures/3_strat_race.png")
+magick::image_read("../output/figures/3_strat_sex.png") %>% image_trim() %>% image_write("../output/figures/3_strat_sex.png")
+magick::image_read("../output/figures/3_strat_edu.png") %>% image_trim() %>% image_write("../output/figures/3_strat_edu.png")
