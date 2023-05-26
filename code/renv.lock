@@ -27,45 +27,6 @@
       ],
       "Hash": "b2866e62bab9378c3cc9476a1954226b"
     },
-    "DiagrammeR": {
-      "Package": "DiagrammeR",
-      "Version": "1.0.9",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "RColorBrewer",
-        "downloader",
-        "dplyr",
-        "glue",
-        "htmltools",
-        "htmlwidgets",
-        "igraph",
-        "influenceR",
-        "magrittr",
-        "purrr",
-        "readr",
-        "rlang",
-        "rstudioapi",
-        "scales",
-        "stringr",
-        "tibble",
-        "tidyr",
-        "viridis",
-        "visNetwork"
-      ],
-      "Hash": "cc43d8972a07f65e651c2861626003da"
-    },
-    "DiagrammeRsvg": {
-      "Package": "DiagrammeRsvg",
-      "Version": "0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "V8"
-      ],
-      "Hash": "21e1cb313a641634215226782a49e5a1"
-    },
     "KMsurv": {
       "Package": "KMsurv",
       "Version": "0.1-5",
@@ -690,19 +651,6 @@
       ],
       "Hash": "e8a1e41acf02548751f45c718d55aa6a"
     },
-    "crosstalk": {
-      "Package": "crosstalk",
-      "Version": "1.2.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R6",
-        "htmltools",
-        "jsonlite",
-        "lazyeval"
-      ],
-      "Hash": "6aa54f69598c32177e920eb3402e8293"
-    },
     "crul": {
       "Package": "crul",
       "Version": "1.3",
@@ -820,17 +768,6 @@
       ],
       "Hash": "8b708f296afd9ae69f450f9640be8990"
     },
-    "downloader": {
-      "Package": "downloader",
-      "Version": "0.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "digest",
-        "utils"
-      ],
-      "Hash": "f4f2a915e0dedbdf016a83b63477349f"
-    },
     "dplyr": {
       "Package": "dplyr",
       "Version": "1.1.2",
@@ -883,6 +820,33 @@
         "rlang"
       ],
       "Hash": "bb0eec2fe32e88d9e2836c2f73ea2077"
+    },
+    "emmeans": {
+      "Package": "emmeans",
+      "Version": "1.8.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "estimability",
+        "graphics",
+        "methods",
+        "mvtnorm",
+        "numDeriv",
+        "stats",
+        "utils"
+      ],
+      "Hash": "4d048b0b6eb757e092641610b989af5b"
+    },
+    "estimability": {
+      "Package": "estimability",
+      "Version": "1.4.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "stats"
+      ],
+      "Hash": "1a78288c1188772070240b89ffe33579"
     },
     "evaluate": {
       "Package": "evaluate",
@@ -1348,18 +1312,6 @@
       ],
       "Hash": "c5ba8f5056487403a299b91984be86ca"
     },
-    "ggvenn": {
-      "Package": "ggvenn",
-      "Version": "0.1.10",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "dplyr",
-        "ggplot2",
-        "grid"
-      ],
-      "Hash": "76c1d0fc86099be703106f11ba755520"
-    },
     "globals": {
       "Package": "globals",
       "Version": "0.16.2",
@@ -1680,40 +1632,6 @@
       ],
       "Hash": "99df65cfef20e525ed38c3d2577f7190"
     },
-    "igraph": {
-      "Package": "igraph",
-      "Version": "1.4.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "cpp11",
-        "grDevices",
-        "graphics",
-        "magrittr",
-        "methods",
-        "pkgconfig",
-        "rlang",
-        "stats",
-        "utils"
-      ],
-      "Hash": "3e476b375c746d899fd53a7281d78191"
-    },
-    "influenceR": {
-      "Package": "influenceR",
-      "Version": "0.1.0.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "igraph",
-        "methods",
-        "utils"
-      ],
-      "Hash": "3b6f9903fb23dd0db948f60914acfbee"
-    },
     "insight": {
       "Package": "insight",
       "Version": "0.19.1",
@@ -1964,18 +1882,6 @@
         "timechange"
       ],
       "Hash": "e25f18436e3efd42c7c590a1c4c15390"
-    },
-    "magick": {
-      "Package": "magick",
-      "Version": "2.7.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "Rcpp",
-        "curl",
-        "magrittr"
-      ],
-      "Hash": "92dd08195d2270e188dcac8d4b219e84"
     },
     "magrittr": {
       "Package": "magrittr",
@@ -2301,38 +2207,6 @@
         "withr"
       ],
       "Hash": "6b0c222c5071efe0f3baf3dae9aa40e2"
-    },
-    "plotly": {
-      "Package": "plotly",
-      "Version": "4.10.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "RColorBrewer",
-        "base64enc",
-        "crosstalk",
-        "data.table",
-        "digest",
-        "dplyr",
-        "ggplot2",
-        "htmltools",
-        "htmlwidgets",
-        "httr",
-        "jsonlite",
-        "lazyeval",
-        "magrittr",
-        "promises",
-        "purrr",
-        "rlang",
-        "scales",
-        "tibble",
-        "tidyr",
-        "tools",
-        "vctrs",
-        "viridisLite"
-      ],
-      "Hash": "3781cf6971c6467fa842a63725bbee9e"
     },
     "png": {
       "Package": "png",
@@ -2723,13 +2597,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "690bd2acc42a9166ce34845884459320"
-    },
-    "rsvg": {
-      "Package": "rsvg",
-      "Version": "2.4.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "2fe4b39fada9c0ac9d7fc3f0daabd350"
     },
     "rvest": {
       "Package": "rvest",
@@ -3282,20 +3149,6 @@
       ],
       "Hash": "a745bda7aff4734c17294bb41d4e4607"
     },
-    "viridis": {
-      "Package": "viridis",
-      "Version": "0.6.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "ggplot2",
-        "gridExtra",
-        "stats",
-        "viridisLite"
-      ],
-      "Hash": "ee96aee95a7a563e5496f8991e9fde4b"
-    },
     "viridisLite": {
       "Package": "viridisLite",
       "Version": "0.4.2",
@@ -3305,24 +3158,6 @@
         "R"
       ],
       "Hash": "c826c7c4241b6fc89ff55aaea3fa7491"
-    },
-    "visNetwork": {
-      "Package": "visNetwork",
-      "Version": "2.1.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "grDevices",
-        "htmltools",
-        "htmlwidgets",
-        "jsonlite",
-        "magrittr",
-        "methods",
-        "stats",
-        "utils"
-      ],
-      "Hash": "3e48b097e8d9a91ecced2ed4817a678d"
     },
     "vroom": {
       "Package": "vroom",
@@ -3349,22 +3184,6 @@
         "withr"
       ],
       "Hash": "7015a74373b83ffaef64023f4a0f5033"
-    },
-    "vtree": {
-      "Package": "vtree",
-      "Version": "5.6.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "DiagrammeR",
-        "DiagrammeRsvg",
-        "R",
-        "htmlwidgets",
-        "rsvg",
-        "shiny",
-        "utf8"
-      ],
-      "Hash": "db6d6d2d020584a4d58a72953a602261"
     },
     "waldo": {
       "Package": "waldo",

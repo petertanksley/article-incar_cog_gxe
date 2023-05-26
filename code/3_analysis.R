@@ -4,7 +4,7 @@ hrs_full <- import("hrs_full_analytic.rds")
 hrs_pgs_eur <- import("hrs_pgs_analytic.rds") %>% filter(race_ethn=="White")
 hrs_pgs_afr <- import("hrs_pgs_analytic.rds") %>% filter(race_ethn=="Black")
 
-#=H1: prevalence===============================================================
+#=Main analysis================================================================
 
 #set model formulas 
 m10_base <- formula("cog_2cat_num ~ 
@@ -165,6 +165,120 @@ main_results3 <- bind_rows(res_30,
 
 #export results
 export(main_results3, "../output/results/tab_s1_afr.csv")
+
+#=sub-group analysis===========================================================
+
+#baseline model
+m40_main_eff <- formula("cog_2cat_num ~ factor(incar_ever) + factor(apoe_info99_4ct) +
+                   factor(sex) + factor(race_ethn) + scale(age) + factor(edu) + factor(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+                   (1|hhidpn)")
+
+# #Sex
+# m41_incar_sex <- formula("cog_2cat_num ~ factor(incar_ever)*factor(sex) + factor(apoe_info99_4ct)+
+#                     factor(race_ethn) + scale(age) + factor(edu) + scale(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+#                    (1|hhidpn)")
+# m42_apoe_sex <- formula("cog_2cat_num ~ factor(incar_ever) + factor(apoe_info99_4ct)*factor(sex) +
+#                     factor(race_ethn) + scale(age) + factor(edu) + scale(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+#                    (1|hhidpn)")
+# 
+# #Race/ethnicity
+# m43_incar_race <- formula("cog_2cat_num ~ factor(incar_ever)*factor(race_ethn) + factor(apoe_info99_4ct) +
+#                     factor(sex) + scale(age) + factor(edu) + scale(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+#                    (1|hhidpn)")
+# m44_apoe_race <- formula("cog_2cat_num ~ factor(incar_ever) + factor(apoe_info99_4ct)*factor(race_ethn) +
+#                     factor(sex) + scale(age) + factor(edu) + scale(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+#                    (1|hhidpn)")
+# 
+# #Edu
+# m45_incar_edu <- formula("cog_2cat_num ~ factor(incar_ever)*factor(edu) + factor(apoe_info99_4ct) +
+#                     factor(sex) + factor(race_ethn) + scale(age) + scale(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+#                    (1|hhidpn)")
+# m46_apoe_edu <- formula("cog_2cat_num ~ factor(incar_ever) + factor(apoe_info99_4ct)*factor(edu) +
+#                     factor(sex) + factor(race_ethn) + scale(age) + scale(social_origins) + factor(smoke_ever) + factor(stroke_ever) + factor(study) +
+#                    (1|hhidpn)")
+
+#run models 
+m40_main_eff   <- glmer(m40_main_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m41_incar_sex  <- glmer(m41_incar_sex,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m42_apoe_sex   <- glmer(m42_apoe_sex,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m43_incar_race <- glmer(m43_incar_race, data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m44_apoe_race  <- glmer(m44_apoe_race,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m45_incar_edu  <- glmer(m45_incar_edu,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m46_apoe_edu   <- glmer(m46_apoe_edu,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# 
+# 
+# #export raw results
+# export(c("m40_main_eff","m41_incar_sex","m42_apoe_sex",
+#          "m43_incar_race","m44_apoe_race","m45_incar_edu",
+#          "m46_apoe_edu"), "../output/results/res_s2_raw.rdata")
+
+# #table models
+# res_40 <- tidy(m40_main_eff,   exponentiate=TRUE) %>% mutate(model="base")       %>% mutate(glance(m40_main_eff)) 
+# res_41 <- tidy(m41_incar_sex,  exponentiate=TRUE) %>% mutate(model="incar_sex")  %>% mutate(glance(m41_incar_sex)) 
+# res_42 <- tidy(m42_apoe_sex,   exponentiate=TRUE) %>% mutate(model="apoe_sex")   %>% mutate(glance(m42_apoe_sex)) 
+# res_43 <- tidy(m43_incar_race, exponentiate=TRUE) %>% mutate(model="incar_race") %>% mutate(glance(m43_incar_race)) 
+# res_44 <- tidy(m44_apoe_race,  exponentiate=TRUE) %>% mutate(model="apoe_race")  %>% mutate(glance(m44_apoe_race)) 
+# res_45 <- tidy(m45_incar_edu,  exponentiate=TRUE) %>% mutate(model="incar_edu")  %>% mutate(glance(m45_incar_edu)) 
+# res_46 <- tidy(m46_apoe_edu,   exponentiate=TRUE) %>% mutate(model="apoe_edu")   %>% mutate(glance(m46_apoe_edu)) 
+# 
+# #bind results
+# subgroup_res <- bind_rows(res_40,
+#                           res_41,
+#                           res_42,
+#                           res_43,
+#                           res_44,
+#                           res_45,
+#                           res_46
+# )
+# 
+# #export results
+# export(subgroup_res, "../output/results/tab_s2_subgroups.csv")
+
+#import
+res <- import_list("../output/results/res_s2_raw.rdata")
+list2env(res, .GlobalEnv)
+
+m40_emmeans_i    <- emmeans(m40_main_eff, specs = pairwise ~ incar_ever,                 #type = "response", 
+                            adjust="fdr")
+m40_emmeans_a    <- emmeans(m40_main_eff, specs = pairwise ~ apoe_info99_4ct,            type = "response", adjust="fdr")
+m40_emmeans_isex <- emmeans(m40_main_eff, specs = pairwise ~ incar_ever      |sex,       type = "response", adjust="fdr")
+m40_emmeans_asex <- emmeans(m40_main_eff, specs = pairwise ~ apoe_info99_4ct |sex,       type = "response", adjust="fdr")
+m40_emmeans_irac <- emmeans(m40_main_eff, specs = pairwise ~ incar_ever      |race_ethn, type = "response", adjust="fdr")
+m40_emmeans_arac <- emmeans(m40_main_eff, specs = pairwise ~ apoe_info99_4ct |race_ethn, type = "response", adjust="fdr")
+m40_emmeans_iedu <- emmeans(m40_main_eff, specs = pairwise ~ incar_ever      |edu,       type = "response", adjust="fdr")
+m40_emmeans_aedu <- emmeans(m40_main_eff, specs = pairwise ~ apoe_info99_4ct |edu,       type = "response", adjust="fdr")
+
+# m41_emmeans <- emmeans(m41_incar_sex,  specs = pairwise ~ incar_ever     |sex,       type = "response", adjust="fdr")
+# m42_emmeans <- emmeans(m42_apoe_sex,   specs = pairwise ~ apoe_info99_4ct|sex,       type = "response", adjust="fdr")
+# m43_emmeans <- emmeans(m43_incar_race, specs = pairwise ~ incar_ever     |race_ethn, type = "response", adjust="fdr")
+# m44_emmeans <- emmeans(m44_apoe_race,  specs = pairwise ~ apoe_info99_4ct|race_ethn, type = "response", adjust="fdr")
+# m45_emmeans <- emmeans(m45_incar_edu,  specs = pairwise ~ incar_ever     |edu,       type = "response", adjust="fdr")
+# m46_emmeans <- emmeans(m46_apoe_edu,   specs = pairwise ~ apoe_info99_4ct|edu,       type = "response", adjust="fdr")
+
+# m41_emmeans
+# m42_emmeans
+# m43_emmeans
+# m44_emmeans
+# m45_emmeans
+# m46_emmeans
+
+# rio::export(c("m41_emmeans",
+#               "m42_emmeans",
+#               "m43_emmeans",
+#               "m44_emmeans",
+#               "m45_emmeans",
+#               "m46_emmeans"),
+#             "../output/results/tab_s1_emmeans.rdata")
+
+rio::export(c("m40_emmeans_i",
+              "m40_emmeans_a",
+              "m40_emmeans_isex",
+              "m40_emmeans_asex",
+              "m40_emmeans_irac",
+              "m40_emmeans_arac",
+              "m40_emmeans_iedu",
+              "m40_emmeans_aedu"),
+            "../output/results/tab_s1_emmeans.rdata")
 
 #=END==========================================================================
 

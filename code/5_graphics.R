@@ -87,72 +87,168 @@ cog_apoe4
 
 ggsave("../output/figures/2_cogstat_apoe4.png", height = 7, width = 10)
 
+#=Subgroup analysis===========================================================
 
-#=contingency tables===========================================================
+subgroup_res <- import_list("../output/results/tab_s1_emmeans.rdata")
+list2env(subgroup_res, .GlobalEnv)
 
-p_load(ggvenn,
-       magick,
-       plotly,
-       vtree,
-       webshot2)
+#group all EMMs
+emmeans4i <- m40_emmeans_i$emmeans    %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = incar_ever,      strata = "ref")     %>% select(-c(incar_ever))
+emmeans4a <- m40_emmeans_a$emmeans    %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = apoe_info99_4ct, strata = "ref")     %>% select(-c(apoe_info99_4ct))
+emmeans41 <- m40_emmeans_isex$emmeans %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = incar_ever,      strata = sex)       %>% select(-c(sex, incar_ever))
+emmeans42 <- m40_emmeans_asex$emmeans %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = apoe_info99_4ct, strata = sex)       %>% select(-c(sex,apoe_info99_4ct))
+emmeans43 <- m40_emmeans_irac$emmeans %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = incar_ever,      strata = race_ethn) %>% select(-c(race_ethn, incar_ever))
+emmeans44 <- m40_emmeans_arac$emmeans %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = apoe_info99_4ct, strata = race_ethn) %>% select(-c(race_ethn,apoe_info99_4ct))
+emmeans45 <- m40_emmeans_iedu$emmeans %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = incar_ever,      strata = edu)       %>% select(-c(edu, incar_ever))
+emmeans46 <- m40_emmeans_aedu$emmeans %>% as_tibble() %>% mutate(across(c(rate, SE, asymp.LCL, asymp.UCL), ~exp(.)), var = apoe_info99_4ct, strata = edu)       %>% select(-c(edu,apoe_info99_4ct))
 
-# strat_race <- table(#hrs$cog_2cat,
-#                     hrs$incar_ever,
-#                     hrs$apoe_info99_4ct,
-#                     hrs$race_ethn) %>% 
-#   as.data.frame()
+emmeans_all4 <- bind_rows(emmeans4i,
+                          emmeans4a,
+                          emmeans41,
+                          emmeans42,
+                          emmeans43,
+                          emmeans44,
+                          emmeans45,
+                          emmeans46) 
+rm(emmeans4i,
+   emmeans4a,
+   emmeans41,
+   emmeans42,
+   emmeans43,
+   emmeans44,
+   emmeans45,
+   emmeans46)
+
+
+# #group all contrasts
+# contast41 <- m41_emmeans$contrasts %>% as_tibble() %>% mutate(strata = sex)       %>% select(-sex)
+# contast42 <- m42_emmeans$contrasts %>% as_tibble() %>% mutate(strata = sex)       %>% select(-sex)
+# contast43 <- m43_emmeans$contrasts %>% as_tibble() %>% mutate(strata = race_ethn) %>% select(-race_ethn)
+# contast44 <- m44_emmeans$contrasts %>% as_tibble() %>% mutate(strata = race_ethn) %>% select(-race_ethn)
+# contast45 <- m45_emmeans$contrasts %>% as_tibble() %>% mutate(strata = edu)       %>% select(-edu)
+# contast46 <- m46_emmeans$contrasts %>% as_tibble() %>% mutate(strata = edu)       %>% select(-edu)
+# 
+# constrats_all4 <- bind_rows(contast41,
+#                             contast42,
+#                             contast43,
+#                             contast44,
+#                             contast45,
+#                             contast46) %>% 
+#   mutate(strata_group = case_when((strata %in% c("Male", "Female")) ~ "Sex",
+#                            (strata %in% c("Black", "White", "Hispanic", "Other")) ~ "Race/Ethnicity",
+#                            (strata %in% c("hs or more", "less than hs")) ~ "Education"))
+# rm(contast41,
+#    contast42,
+#    contast43,
+#    contast44,
+#    contast45,
+#    contast46)
+
+#visualize
+theme_set(theme_classic2())
+
+refs_i <- emmeans_all4 %>% filter(strata_group=="Ref." & var_group=='Lifetime Incarceration') %>% pull(rate)
+refs_a <- emmeans_all4 %>% filter(strata_group=="Ref." & !var_group=='Lifetime Incarceration') %>% pull(rate)
+
+subgroup_plot <- emmeans_all4 %>% 
+  mutate(strata_group = case_when((strata %in% c("Male", "Female")) ~ "Sex",
+                                  (strata %in% c("Black", "White", "Hispanic", "Other")) ~ "Race",
+                                  (strata %in% c("hs or more", "less than hs")) ~ "Education",
+                                  TRUE ~ "Ref."),
+         strata_group = fct_relevel(strata_group, "Ref.", "Sex", "Race", "Education"),
+         var_group = case_when((var %in% c("Incarcerated", "Not Incarcerated")) ~ "Lifetime Incarceration",
+                               (var %in% c("zero copies", "one copy", "two copies")) ~ "APOE-4 allele count"),
+         var_group = fct_relevel(var_group, "Lifetime Incarceration")) %>% 
+  
+  filter(!strata_group=="Ref.") %>% 
+ggplot(aes(rate, strata, col=var)) +
+  geom_vline(xintercept = 1, linetype="dashed", color="grey") +
+  geom_vline(data=. %>% filter(var_group=='Lifetime Incarceration'),  aes(xintercept=refs_i[1], col=var), linetype="dotted", show.legend = F) +
+  geom_vline(data=. %>% filter(var_group=='Lifetime Incarceration'),  aes(xintercept=refs_i[2], col=var), linetype="dotted", show.legend = F) +
+  geom_vline(data=. %>% filter(!var_group=='Lifetime Incarceration'), aes(xintercept=refs_a[1], col=var), linetype="dotted", show.legend = F) +
+  geom_vline(data=. %>% filter(!var_group=='Lifetime Incarceration'), aes(xintercept=refs_a[2], col=var), linetype="dotted", show.legend = F) +
+  geom_vline(data=. %>% filter(!var_group=='Lifetime Incarceration'), aes(xintercept=refs_a[3], col=var), linetype="dotted", show.legend = F) +
+  geom_point(position = position_dodge(width = .5), size=2) +
+  geom_linerange(aes(xmin=asymp.LCL, xmax=asymp.UCL), position = position_dodge(width = .5), linewidth=1) +
+  theme(strip.placement = "outside",
+        strip.background = element_rect(color = NA, fill = NA),
+        panel.background = element_rect(color = "black"),
+        axis.ticks.y = element_blank()) +
+  labs(title = "Estimated Marginal Means of IRR within Strata",
+       y="",
+       x="IRR") +
+  scale_y_discrete(limits=rev) +
+  facet_grid(strata_group~var_group, scales = "free", switch = "y", space = "free_y") +
+  coord_cartesian(xlim = c(1,2))
+
+
+ggsave("../output/figures/fig_subgroup.png", height = 7, width = 10)
+
+# #=contingency tables===========================================================
+# 
+# p_load(ggvenn,
+#        magick,
+#        plotly,
+#        vtree,
+#        webshot2)
+# 
+# # strat_race <- table(#hrs$cog_2cat,
+# #                     hrs$incar_ever,
+# #                     hrs$apoe_info99_4ct,
+# #                     hrs$race_ethn) %>% 
+# #   as.data.frame()
+# # 
+# # 
+# # strat_sex <- table(#hrs$cog_2cat,
+# #                    hrs$incar_ever,
+# #                    hrs$apoe_info99_4ct,
+# #                    hrs$sex) %>% 
+# #   as.data.frame()
+# # 
+# # strat_edu <- table(#hrs$cog_2cat,
+# #                    hrs$incar_ever,
+# #                    hrs$apoe_info99_4ct,
+# #                    hrs$edu) %>% 
+# #   as.data.frame() 
+# 
+# strat_none <- vtree(hrs, vars = "incar_ever apoe_info99_4ct",
+#       sameline = TRUE, showlegend = TRUE,
+#       labelvar = c(#cog_2cat="Cognitive Status",
+#                    incar_ever="Lifetime\nincarceration",
+#                    apoe_info99_4ct="APOE-4 genotype"))
+# strat_race <- vtree(hrs, vars = "incar_ever  apoe_info99_4ct race_ethn",
+#       sameline = TRUE, showlegend = TRUE,
+#       labelvar = c(#cog_2cat="Cognitive Status", 
+#                    incar_ever="Lifetime\nincarceration",
+#                    apoe_info99_4ct="APOE-4 genotype",
+#                    race_ethn="Race/ethnicity"))
+# strat_sex <- vtree(hrs, vars = "cog_2cat incar_ever apoe_info99_4ct sex",
+#       sameline = TRUE, showlegend = TRUE,
+#       labelvar = c(cog_2cat="Cognitive Status", 
+#                    incar_ever="Lifetime\nincarceration",
+#                    apoe_info99_4ct="APOE-4 genotype",
+#                    sex="Sex"))
+# strat_edu <- vtree(hrs, vars = "cog_2cat incar_ever apoe_info99_4ct edu",
+#       sameline = TRUE, showlegend = TRUE,
+#       labelvar = c(cog_2cat="Cognitive Status", 
+#                    incar_ever="Lifetime\nincarceration",
+#                    apoe_info99_4ct="APOE-4 genotype",
+#                    edu="Educational\nattainment"))
 # 
 # 
-# strat_sex <- table(#hrs$cog_2cat,
-#                    hrs$incar_ever,
-#                    hrs$apoe_info99_4ct,
-#                    hrs$sex) %>% 
-#   as.data.frame()
+# htmlwidgets::saveWidget(strat_none, "../output/figures/3_strat_none.html") 
+# webshot("../output/figures/3_strat_none.html", "../output/figures/3_strat_none.png")
 # 
-# strat_edu <- table(#hrs$cog_2cat,
-#                    hrs$incar_ever,
-#                    hrs$apoe_info99_4ct,
-#                    hrs$edu) %>% 
-#   as.data.frame() 
-
-strat_none <- vtree(hrs, vars = "incar_ever apoe_info99_4ct",
-      sameline = TRUE, showlegend = TRUE,
-      labelvar = c(#cog_2cat="Cognitive Status",
-                   incar_ever="Lifetime\nincarceration",
-                   apoe_info99_4ct="APOE-4 genotype"))
-strat_race <- vtree(hrs, vars = "incar_ever  apoe_info99_4ct race_ethn",
-      sameline = TRUE, showlegend = TRUE,
-      labelvar = c(#cog_2cat="Cognitive Status", 
-                   incar_ever="Lifetime\nincarceration",
-                   apoe_info99_4ct="APOE-4 genotype",
-                   race_ethn="Race/ethnicity"))
-strat_sex <- vtree(hrs, vars = "cog_2cat incar_ever apoe_info99_4ct sex",
-      sameline = TRUE, showlegend = TRUE,
-      labelvar = c(cog_2cat="Cognitive Status", 
-                   incar_ever="Lifetime\nincarceration",
-                   apoe_info99_4ct="APOE-4 genotype",
-                   sex="Sex"))
-strat_edu <- vtree(hrs, vars = "cog_2cat incar_ever apoe_info99_4ct edu",
-      sameline = TRUE, showlegend = TRUE,
-      labelvar = c(cog_2cat="Cognitive Status", 
-                   incar_ever="Lifetime\nincarceration",
-                   apoe_info99_4ct="APOE-4 genotype",
-                   edu="Educational\nattainment"))
-
-
-htmlwidgets::saveWidget(strat_none, "../output/figures/3_strat_none.html") 
-webshot("../output/figures/3_strat_none.html", "../output/figures/3_strat_none.png")
-
-htmlwidgets::saveWidget(strat_race, "../output/figures/3_strat_race.html") 
-webshot("../output/figures/3_strat_race.html", "../output/figures/3_strat_race.png")
-
-htmlwidgets::saveWidget(strat_sex, "../output/figures/3_strat_sex.html") 
-webshot("../output/figures/3_strat_sex.html", "../output/figures/3_strat_sex.png")
-
-htmlwidgets::saveWidget(strat_edu, "../output/figures/3_strat_edu.html") 
-webshot("../output/figures/3_strat_edu.html", "../output/figures/3_strat_edu.png")
-
-magick::image_read("../output/figures/3_strat_none.png") %>% image_trim() %>% image_write("../output/figures/3_strat_none.png")
-magick::image_read("../output/figures/3_strat_race.png") %>% image_trim() %>% image_write("../output/figures/3_strat_race.png")
-magick::image_read("../output/figures/3_strat_sex.png") %>% image_trim() %>% image_write("../output/figures/3_strat_sex.png")
-magick::image_read("../output/figures/3_strat_edu.png") %>% image_trim() %>% image_write("../output/figures/3_strat_edu.png")
+# htmlwidgets::saveWidget(strat_race, "../output/figures/3_strat_race.html") 
+# webshot("../output/figures/3_strat_race.html", "../output/figures/3_strat_race.png")
+# 
+# htmlwidgets::saveWidget(strat_sex, "../output/figures/3_strat_sex.html") 
+# webshot("../output/figures/3_strat_sex.html", "../output/figures/3_strat_sex.png")
+# 
+# htmlwidgets::saveWidget(strat_edu, "../output/figures/3_strat_edu.html") 
+# webshot("../output/figures/3_strat_edu.html", "../output/figures/3_strat_edu.png")
+# 
+# magick::image_read("../output/figures/3_strat_none.png") %>% image_trim() %>% image_write("../output/figures/3_strat_none.png")
+# magick::image_read("../output/figures/3_strat_race.png") %>% image_trim() %>% image_write("../output/figures/3_strat_race.png")
+# magick::image_read("../output/figures/3_strat_sex.png") %>% image_trim() %>% image_write("../output/figures/3_strat_sex.png")
+# magick::image_read("../output/figures/3_strat_edu.png") %>% image_trim() %>% image_write("../output/figures/3_strat_edu.png")
