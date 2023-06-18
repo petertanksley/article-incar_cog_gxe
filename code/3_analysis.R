@@ -30,6 +30,9 @@ m12 <- glmer(m12_incar,     data=hrs_full, family=poisson(link="log"), control=g
 m13 <- glmer(m13_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 m14 <- glmer(m14_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
+#check linear probabily model
+# lmer(m14_int_eff,   data=hrs_full) %>% broom.mixed::tidy(conf.int=TRUE) %>% view()
+
 rio::export(c("m10","m11","m12","m13","m14"),
        "../output/results/tab3_main_results.rdata")
 

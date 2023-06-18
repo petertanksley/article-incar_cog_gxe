@@ -19,7 +19,7 @@ hrs_recodes <- hrs_merged %>%
                                   TRUE ~ NA_real_)) %>% 
   mutate(edu = ifelse(edu_yrs>=12, "hs or more", "less than hs"),
          edu = fct_relevel(edu, "hs or more", "less than hs")) %>% 
-  filter(!study %in% c("HRS", "LBB"))
+  filter(!study %in% c("HRS", "LBB")) #removed 137,126 rows (53%), 122,510 rows remaining
 
 #==============================================================================
 # Create analytic samples: with PGS (W/B), without PGS (ALL)
@@ -38,7 +38,7 @@ hrs_pgs <- hrs_recodes %>%
          edu_yrs, edu,
          smoke_ever
   ) %>%
-  drop_na(-dod_yr) #removed 77,604 rows (63%), 44,906 rows remaining
+  drop_na(-c(dod_yr)) #removed 77,604 rows (63%), 44,906 rows remaining
 
 
 # #check case count
@@ -51,7 +51,7 @@ hrs_full <- hrs_recodes %>%
   select(hhidpn,
          study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
          starts_with("cog_2cat"), cogfunction,
-         # ad_pgs, starts_with("pc"),
+         ad_pgs, starts_with("pc"),
          incar_ever, incar_time_3cat,
          stroke_ever,
          apoe_info99_4ct,
@@ -59,13 +59,13 @@ hrs_full <- hrs_recodes %>%
          edu_yrs, edu,
          smoke_ever
   ) %>%
-  drop_na(-dod_yr) #removed 67,165 rows (55%), 55,345 rows remaining
+  drop_na(-c(dod_yr, ad_pgs, starts_with("pc"))) #removed 225,212 rows (80%), 55,355 rows remaining
 
 
 # #check case count
 # hrs_full %>% count(cases = n_distinct(hhidpn))
 # # cases     n
-# #  6949 55345
+# #  6951 55355
 
 #=PGS - Recodes======================================================================
 # residualize for PCs 1-10 BY RACE
@@ -80,4 +80,7 @@ hrs_pgs_resid <- hrs_pgs %>%
 #export analytic dataframes
 rio::export(hrs_pgs_resid, "hrs_pgs_analytic.rds")
 rio::export(hrs_full, "hrs_full_analytic.rds")
+
+#clean up environment
+rm(list=ls())
 

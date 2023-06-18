@@ -16,11 +16,11 @@ pgs_afr <- import(glue("{hrs_clean_dir}polygenic_scores/pgs_v4_afr_clean.rds")) 
 pgs <- bind_rows(pgs_eur, pgs_afr)
 rm(pgs_eur, pgs_afr)
 
-#CVs: demographics; APOE status; history of stroke; social origins; educational attainment; income
+#CVs: demographics; APOE status; history of stroke; social origins; educational attainment; smoking status
 demo     <- import(glue("{hrs_clean_dir}demographics/demo_cleaned.rds"))           
 apoe     <- import(glue("{hrs_clean_dir}serotonin_apoe/serotonin_apoe_clean.rds")) 
 stroke   <- import(glue("{hrs_clean_dir}stroke/stroke_clean.rds"))   
-smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds"))
+smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds")) %>% distinct(hhidpn, .keep_all=TRUE) %>% select(hhidpn, smoke_ever)
 soc_orig <- import(glue("{hrs_clean_dir}social_origins/social_origin_clean.rds"))  
 # ses      <- import(glue("{hrs_clean_dir}ses/ses_clean.rds"))
 edu      <- import(glue("{hrs_clean_dir}education/edu_tracker_clean.rds"))
@@ -44,12 +44,12 @@ id_fct <- function(x) {
 }
 
 #longitudinal dataframes: convert year to numeric
-dfs_years <- list(cog_stat, stroke, death, smoke
+dfs_years <- list(cog_stat, stroke, death
                   ) %>% 
   lapply(., year_num)
 
 #all dataframes: convert id for factor
-dfs_ids <- c(dfs_years, list(incar, pgs, demo, apoe, soc_orig, edu
+dfs_ids <- c(dfs_years, list(incar, pgs, demo, apoe, soc_orig, edu, smoke
                              )) %>% 
   lapply(., id_fct)
 
@@ -90,7 +90,7 @@ var_list <- c("ad_pgs",
               "apoe_info99_4ct")
 
 hrs_merged_studyvars_sparse <- hrs_merged_studyvars %>% 
-  filter(!if_all(all_of(var_list), is.na)) #removed 59,562 rows (19%), 259,636 rows remaining
+  filter(!if_all(all_of(var_list), is.na)) #removed 38,631 rows (12%), 280,567 rows remaining
 
 #export final merged dataframe
 export(hrs_merged_studyvars_sparse, "hrs_merged.rds")
