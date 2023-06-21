@@ -63,23 +63,26 @@ hrs_labs <- hrs %>%
 
 #time-independent variables
 tab1_top <- hrs_labs %>% 
-  select(-c(age, year, cog_2cat, stroke_ever)) %>% 
-  mutate(ad_pgs_blk = ifelse(race_ethn=="Black", ad_pgs, NA),
-         ad_pgs_wht = ifelse(race_ethn=="White", ad_pgs, NA)) %>% 
-  var_labels(ad_pgs_blk = "Polygenic Index for AD (Black)",
-             ad_pgs_wht = "Polygenic Index for AD (White)") %>% 
+  select(-c(age, year, cog_2cat, stroke_ever, ad_pgs)) %>% 
+  # mutate(ad_pgs_blk = ifelse(race_ethn=="Black", ad_pgs, NA),
+  #        ad_pgs_wht = ifelse(race_ethn=="White", ad_pgs, NA)) %>% 
+  # var_labels(ad_pgs_blk = "Polygenic Index for AD (Black)",
+  #            ad_pgs_wht = "Polygenic Index for AD (White)") %>% 
   distinct(hhidpn, .keep_all=TRUE) %>% 
-  select(-c(hhidpn, ad_pgs)) %>% 
+  select(-c(hhidpn, 
+            # ad_pgs
+            )) %>% 
   tbl_summary(by=incar_ever,
-              type = list(c(ad_pgs_blk, ad_pgs_wht, social_origins) ~ "continuous",
+              type = list(c(#ad_pgs_blk, ad_pgs_wht, 
+                            social_origins) ~ "continuous",
                           c(study, sex, race_ethn, edu, apoe_info99_4ct, smoke_ever) ~ "categorical"),
               statistic = all_continuous() ~ "{mean} ({sd})") %>% 
   add_p() %>% 
   bold_p() %>% 
   add_overall() %>% 
   modify_header(label ~ "**Variable**") %>%
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**") %>% 
-  remove_row_type(variables = c(ad_pgs_blk, ad_pgs_wht), type = "missing")
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**") 
+  # remove_row_type(variables = c(ad_pgs_blk, ad_pgs_wht), type = "missing")
 
 #time-dependent variables
 tab1_bottom <- hrs_labs %>%
@@ -104,11 +107,32 @@ tab1_bottom <- hrs_labs %>%
 
 #stack tables
 tab1_combined <- tbl_stack(tbls = list(tab1_top, tab1_bottom),
-          group_header = c(glue("Time-independent variables (Cases={style_number(cases,big.mark=',')})"), 
-                           glue("Time-dependent variables (Obs.={style_number(obs,big.mark=',')})"))) %>% 
-  modify_caption('**Table 1**. Sample descriptives for time-indenpendent/-deprendent variables')
+          group_header = c(glue("Individuals (N = {style_number(cases,big.mark=',')})"), 
+                           glue("Observations (N = {style_number(obs,big.mark=',')})"))) %>% 
+  modify_caption('**Table 1**. Individual and observation-level descriptive statistics of the Health and Retirement Study.')
 tab1_combined
 
+
+#get pvalues for cognitive status and history of stroke
+cog_pval <- glmer(cog_2cat_num ~ factor(incar_ever) + (1|hhidpn), 
+      data=hrs, 
+      family=binomial, 
+      control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) %>% 
+  tidy() %>% 
+  filter(term=="factor(incar_ever)Incarcerated") %>% 
+  pull(p.value)
+# cog_pval
+# [1] 1.219479e-18
+
+strok_pval <- glmer(stroke_ever ~ factor(incar_ever) + (1|hhidpn), 
+                  data=hrs, 
+                  family=binomial, 
+                  control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) %>% 
+  tidy() %>% 
+  filter(term=="factor(incar_ever)Incarcerated") %>% 
+  pull(p.value)
+# strok_pval
+# [1] 0.2276284
 
 #export .html table
 gtsave(as_gt(tab1_combined), "../output/results/tab1_descriptives.html")
@@ -361,6 +385,7 @@ tab_s1_combined %>%
 
 #=Table S2 - Survival results==================================================
 
+# hrs <- import("hrs_full_analytic.rds")
 
 
 surv_results <- import_list("../output/results/main_results_surv_models.rdata")
@@ -414,8 +439,8 @@ tab_updates <- function(x){
 tab_s2_mods_update <- lapply(tab_s2_mods, tab_updates)
 
 #merge models
-tab_s2_all <- tbl_merge(tab_s2_mods_update, tab_spanner = paste("Model S2.", 1:4, sep = "")) %>% 
-  modify_caption(glue("**Table S2.** Cox proportional hazard model of lifetime incarceration and APOE-4 genotype on first cognitive impairment.")) %>% 
+tab_s2_all <- tbl_merge(tab_s2_mods_update, tab_spanner = paste("Model S1.", 1:4, sep = "")) %>% 
+  modify_caption(glue("**Table S1.** Cox proportional hazard model of lifetime incarceration and APOE-4 genotype on first cognitive impairment.")) %>% 
   modify_footnote(label ~ "All models adjusted for sex, race/ethnicity, high school completion, smoking history, stroke history, and social origins index. All models were stratified by HRS cohort.")
 tab_s2_all
 

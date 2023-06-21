@@ -160,7 +160,7 @@ median_surv_jail <- survplot1$data.survplot %>%
 #==================================================#
 
 
-logrank_incar <- expression(paste("Log-rank: ", chi^2, "(1)=1.89; ", italic("P"), "<0.001"))
+logrank_incar <- expression(paste("Log-rank: ", chi^2, "(1)=189.1; ", italic("P"), "<0.001"))
 cox_incar <- expression(paste("Cox: HR=1.33; ", italic("P"), "<0.001"))
 
 plot1 <- survplot1$plot +
