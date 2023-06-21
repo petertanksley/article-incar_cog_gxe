@@ -203,24 +203,27 @@ data <- tibble(group = c("Genetic risk model",
                              "G+E model",
                              "G\u00D7E model"))
 
+group_cols <- c("darkred", "darkblue", "darkslateblue", "darkorchid4")
 
 models <- ggradar(data,
         background.circle.colour = "white",
         gridline.min.linetype = 1,
         gridline.mid.linetype = 1,
         gridline.max.linetype = 1,
+        gridline.min.colour = "grey",
+        gridline.mid.colour = "grey",
+        gridline.max.colour = "grey",
         plot.legend = FALSE,
         fill = TRUE,
         fill.alpha = .5,
         values.radar = c("", "", ""),
-        group.point.size = 3) +
+        group.point.size = 3,
+        group.colours = group_cols) +
   facet_wrap(~group, ncol=2) +
   theme(strip.background = element_rect(fill = "black", color = "black"),
-        strip.text = element_text(colour = "white", face = "bold"),
-        text = element_text(face = "bold")) +
-  scale_fill_viridis_d() +
-  scale_color_viridis_d() +
+        strip.text = element_text(colour = "white", face = "bold")) +
   coord_fixed(clip = "off")
 
+models
 ggsave("../output/figures/theoretical_mods.tiff",
        models, height = 7, width = 9, dpi = 300)
