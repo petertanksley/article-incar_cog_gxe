@@ -275,10 +275,10 @@ plot2 <- survplot2$plot +
   annotate("text", x=48, y=.15, size=7, fontface="bold", hjust=0, label=logrank_apoe) +
   annotate("text", x=48, y=.1, size=7, fontface="bold", hjust=0, label=cox_apoe1) +
   annotate("text", x=48, y=.05, size=7, fontface="bold", hjust=0, label=cox_apoe2) +
-  scale_fill_manual(name=expression(paste(bolditalic("APOE-\u03b54"), bold(" Allele Count"))),
+  scale_fill_manual(name=expression(paste(bolditalic("APOE-\u03b54"), bold(" genotype"))),
                     values = c("darkblue", "darkslateblue", "darkred"),
                     labels = c("Zero copies", "One copy", "Two copies")) +
-  scale_color_manual(name=expression(paste(bolditalic("APOE-\u03b54"), bold(" Allele Count"))),
+  scale_color_manual(name=expression(paste(bolditalic("APOE-\u03b54"), bold(" genotype"))),
                      values = c("darkblue",  "darkslateblue", "darkred"),
                      labels = c("Zero copies", "One copy", "Two copies"))
 plot2
