@@ -25,20 +25,20 @@ hrs_recodes <- hrs_merged %>%
 # Create analytic samples: with PGS (W/B), without PGS (ALL)
 #=============================================================================#
 
-#analytic sample with PGS
-hrs_pgs <- hrs_recodes %>% 
-  select(hhidpn,
-         study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
-         starts_with("cog_2cat"),cogfunction,
-         ad_pgs, starts_with("pc"),
-         incar_ever, incar_time_3cat,
-         stroke_ever,
-         apoe_info99_4ct,
-         social_origins,
-         edu_yrs, edu,
-         smoke_ever
-  ) %>%
-  drop_na(-c(dod_yr)) #removed 77,604 rows (63%), 44,906 rows remaining
+# #analytic sample with PGS
+# hrs_pgs <- hrs_recodes %>% 
+#   select(hhidpn,
+#          study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
+#          starts_with("cog_2cat"),cogfunction,
+#          ad_pgs, starts_with("pc"),
+#          incar_ever, incar_time_3cat,
+#          stroke_ever,
+#          apoe_info99_4ct,
+#          social_origins,
+#          edu_yrs, edu,
+#          smoke_ever
+#   ) %>%
+#   drop_na(-c(dod_yr)) #removed 77,604 rows (63%), 44,906 rows remaining
 
 
 # #check case count
