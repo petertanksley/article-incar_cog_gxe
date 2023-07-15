@@ -1,4 +1,4 @@
-# article_incar_ad
+# article_incar_cog_gxe
  
 This repo hosts the code for the analysis of the article "History of 
 incarceration and age-related cognitive impairment: Testing models of genetic 
