@@ -9,23 +9,31 @@ cog_stat <- import(glue("{hrs_clean_dir}dementia_status/dementia_status_clean.rd
 
 #IVs: incarceration history; AD pgs (EUR/AFR) & genetic ancestry PCs
 incar   <- import(glue("{hrs_clean_dir}incarceration/incarceration_cleaned.rds")) 
-pgs_eur <- import(glue("{hrs_clean_dir}polygenic_scores/pgs_v4_eur_clean.rds")) %>% 
-  select(hhidpn, "ad_pgs" = E4_01AD2NA_IGAP19, starts_with(c("PC1_5", "PC6_10")))
-pgs_afr <- import(glue("{hrs_clean_dir}polygenic_scores/pgs_v4_afr_clean.rds")) %>% 
-  select(hhidpn, "ad_pgs" = A4_01AD2NA_IGAP19, starts_with(c("PC1_5", "PC6_10")))
-pgs <- bind_rows(pgs_eur, pgs_afr)
-rm(pgs_eur, pgs_afr)
+# pgs_eur <- import(glue("{hrs_clean_dir}polygenic_scores/pgs_v4_eur_clean.rds")) %>% 
+#   select(hhidpn, "ad_pgs" = E4_01AD2NA_IGAP19, starts_with(c("PC1_5", "PC6_10")))
+# pgs_afr <- import(glue("{hrs_clean_dir}polygenic_scores/pgs_v4_afr_clean.rds")) %>% 
+#   select(hhidpn, "ad_pgs" = A4_01AD2NA_IGAP19, starts_with(c("PC1_5", "PC6_10")))
+# pgs <- bind_rows(pgs_eur, pgs_afr)
+# rm(pgs_eur, pgs_afr)
 
 #CVs: demographics; APOE status; history of stroke; social origins; educational attainment; smoking status
+#minimal set
 demo     <- import(glue("{hrs_clean_dir}demographics/demo_cleaned.rds"))           
-apoe     <- import(glue("{hrs_clean_dir}serotonin_apoe/serotonin_apoe_clean.rds")) 
+apoe     <- import(glue("{hrs_clean_dir}serotonin_apoe/serotonin_apoe_clean.rds")) %>% select(hhidpn, apoe_info99_4ct)
 stroke   <- import(glue("{hrs_clean_dir}stroke/stroke_clean.rds"))   
-smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds")) %>% distinct(hhidpn, .keep_all=TRUE) %>% select(hhidpn, smoke_ever)
-soc_orig <- import(glue("{hrs_clean_dir}social_origins/social_origin_clean.rds"))  
-# ses      <- import(glue("{hrs_clean_dir}ses/ses_clean.rds"))
+#full set
+alc      <- import(glue("{hrs_clean_dir}/alcohol/alcohol_clean.rds")) %>% select(hhidpn, year, alc_daily_avg)
+bmi      <- import(glue("{hrs_clean_dir}/bmi/bmi_clean.rds")) %>% select(hhidpn, year, bmi_combo)
+dep      <- import(glue("{hrs_clean_dir}/depression/depression_clean.rds"))
+diab     <- import(glue("{hrs_clean_dir}/diabetes/diabetes_clean.rds"))
 edu      <- import(glue("{hrs_clean_dir}education/edu_tracker_clean.rds"))
-# income   <- import(glue("{hrs_clean_dir}income/income_clean.rds"))    
-death    <- import(glue("{hrs_clean_dir}death/death_clean.rds"))
+hear     <- import(glue("{hrs_clean_dir}/hearing/hearing_clean.rds")) %>% select(-hear_sr_2cat)
+hyper    <- import(glue("{hrs_clean_dir}/hypertension/hypertension_clean.rds"))
+income   <- import(glue("{hrs_clean_dir}income/income_clean.rds"))
+phys_act <- import(glue("{hrs_clean_dir}/physical_activity/physical_activity_clean.rds")) %>% select(hhidpn, year, actx_lt_fct)
+smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds")) %>% select(-smoke_ever)
+soc_orig <- import(glue("{hrs_clean_dir}social_origins/social_origin_clean.rds"))  
+tbi      <- import(glue("{hrs_clean_dir}/traumatic_brain_injury/tbi_clean.rds"))
 
 #=merge cleaned HRS data=======================================================
 
@@ -43,13 +51,17 @@ id_fct <- function(x) {
     mutate(hhidpn = as_factor(hhidpn))
 }
 
-#longitudinal dataframes: convert year to numeric
-dfs_years <- list(cog_stat, stroke, death
-                  ) %>% 
-  lapply(., year_num)
+#longitudinal dataframes: convert year to numeric ##### NOT WORKING ############
+dfs_years <- list(cog_stat, 
+                  alc, bmi, dep, diab, edu, hear, hyper, 
+                  income, phys_act, stroke, tbi)
+  new <- map_dfr(dfs_years, ~{
+    .x %>% 
+      mutate(year = as_numeric(year))
+    })
 
 #all dataframes: convert id for factor
-dfs_ids <- c(dfs_years, list(incar, pgs, demo, apoe, soc_orig, edu, smoke
+dfs_ids <- c(dfs_years, list(incar, demo, apoe, soc_orig, edu, smoke
                              )) %>% 
   lapply(., id_fct)
 
