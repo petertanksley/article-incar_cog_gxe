@@ -27,7 +27,7 @@ bmi      <- import(glue("{hrs_clean_dir}/bmi/bmi_clean.rds")) %>% select(hhidpn,
 dep      <- import(glue("{hrs_clean_dir}/depression/depression_clean.rds"))
 diab     <- import(glue("{hrs_clean_dir}/diabetes/diabetes_clean.rds"))
 edu      <- import(glue("{hrs_clean_dir}education/edu_tracker_clean.rds"))
-hear     <- import(glue("{hrs_clean_dir}/hearing/hearing_clean.rds")) %>% select(-hear_sr_2cat)
+hear     <- import(glue("{hrs_clean_dir}/hearing/hearing_clean.rds")) %>% select(-hear_sr)
 hyper    <- import(glue("{hrs_clean_dir}/hypertension/hypertension_clean.rds"))
 income   <- import(glue("{hrs_clean_dir}income/income_clean.rds"))
 phys_act <- import(glue("{hrs_clean_dir}/physical_activity/physical_activity_clean.rds")) %>% select(hhidpn, year, actx_lt_fct)
@@ -35,7 +35,7 @@ smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds")) %>% select(-sm
 soc_orig <- import(glue("{hrs_clean_dir}social_origins/social_origin_clean.rds")) %>% select(hhidpn, social_origins)
 tbi      <- import(glue("{hrs_clean_dir}/traumatic_brain_injury/tbi_clean.rds"))
 #death
-death <- import(glue("{hrs_clean_dir}/death/death_clean.rds")) %>% select(hhidpn, dod_yr)
+death <- import(glue("{hrs_clean_dir}/death/death_clean.rds")) %>% select(hhidpn, year, dod_yr)
 
 #=merge cleaned HRS data=======================================================
 
@@ -85,8 +85,8 @@ hrs_merged_studyvars <- hrs_merged %>%
          bmi_combo,
          cesd,
          diab,
-         edu_degree,
-         hear_sr,
+         edu_yrs,
+         hear_sr_2cat,
          hibp,
          income_hh,
          actx_lt_fct,

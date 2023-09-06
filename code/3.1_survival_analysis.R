@@ -5,12 +5,11 @@ source("0_packages.R")
 
 
 
+#=Data set up for survival analysis==========================================
 
 
 if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
   hrs_full <- import("hrs_full_analytic.rds") 
-  
-  #=Data set up for survival analysis==========================================
   
   #make survival model recodes (age as time-scale approach)
   hrs_surv <- hrs_full %>% 
@@ -27,14 +26,23 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
     mutate(cog_ever = max(cog_2cat_num),
            cog_surv_age = ifelse(cog_ever>0, cog_first, max(study_age))) %>% 
     ungroup() 
-    # filter(age>=50) #removed 2,032 rows (4%), 53,313 rows remaining
+  # filter(age>=50) #removed 2,032 rows (4%), 53,313 rows remaining
   
   
   #time-independent 
   hrs_surv_ind <- hrs_surv %>% 
-    distinct(hhidpn, .keep_all=TRUE) %>% #removed 48,404 rows (87%), 6,951 rows remaining
-    select(-c(year, stroke_ever, age, cog_2cat, cog_2cat_num, cogfunction, edu_yrs)) %>% 
-    filter(cog_surv_age>firstiw_age) #removed 290 rows (4%), 6,661 rows remaining
+    distinct(hhidpn, .keep_all=TRUE) %>% #removed 35,789 rows (84%), 6,872 rows remaining
+    select(hhidpn, study, 
+           cog_surv_age, cog_first, cog_ever, 
+           dod_yr, dod_age,
+           race_ethn, sex, firstiw, firstiw_age, birthyr,
+           apoe_info99_4ct,
+           incar_ever, incar_time_3cat,
+           edu,
+           social_origins,
+           tbi_ever
+    ) %>% 
+    filter(cog_surv_age>firstiw_age) #removed 214 rows (3%), 6,658 rows remaining
   
   #format time-independent variables
   hrs_surv_ind_fmt <- tmerge(data1 = hrs_surv_ind,
@@ -45,14 +53,35 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
   #time-dependent
   hrs_surv_dep <- hrs_surv %>% 
     distinct(hhidpn, study_age, .keep_all=TRUE) %>% 
-    select(hhidpn, study_age, stroke_ever)
+    select(hhidpn, study_age, 
+           cog_2cat, cog_2cat_num,
+           alc_daily_avg_logc1,
+           bmi_combo,
+           cesd_3cat,
+           diab,
+           hear_sr_2cat,
+           hibp,
+           income_hh_logc1,
+           actx_lt_fct,
+           smoke_stat,
+           stroke_ever)
   
   #merge
   hrs_surv_final <- tmerge(data1 = hrs_surv_ind_fmt,
                            data2 = hrs_surv_dep,
                            id=hhidpn,
-                           stroke=tdc(study_age, stroke_ever)) %>% 
-    filter(tstart>0) #removed 6,661 rows (14%), 42,015 rows remaining
+                           alc   =tdc(study_age, alc_daily_avg_logc1),
+                           bmi   =tdc(study_age, bmi_combo),
+                           cesd  =tdc(study_age, cesd_3cat),
+                           diab  =tdc(study_age, diab),
+                           hear  =tdc(study_age, hear_sr_2cat),
+                           hibp  =tdc(study_age, hibp),
+                           income=tdc(study_age, income_hh_logc1),
+                           active=tdc(study_age, actx_lt_fct),
+                           smoke =tdc(study_age, smoke_stat),
+                           stroke=tdc(study_age, stroke_ever)
+  ) %>% 
+    filter(tstart>0) #removed 6,658 rows (18%), 31,186 rows remaining
   
   export(hrs_surv_final, "hrs_surv_dep.rds")
   export(hrs_surv_ind_fmt, "hrs_surv_ind.rds")
@@ -64,68 +93,71 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
 
 #=Fit Cox model================================================================
 
-#INCARCERATION
-#time-dependent covariates
-cox1 <- coxph(Surv(tstart, tstop, event) ~ factor(incar_ever) +
-                factor(sex) + factor(race_ethn) + factor(edu) + scale(social_origins) + 
-                factor(smoke_ever) + factor(stroke) +
-                strata(study), 
-              data=hrs_surv_dep, id=hhidpn)
-cox1_res <- tidy(cox1, exponentiate = TRUE, conf.int = TRUE) %>% mutate(model = "incar_ever")
-#extract estimates for visuals
-cox1_res_incar <- cox1_res %>% 
-  filter(term=="incar_everIncarcerated") %>% 
-  pull(estimate) 
+#covariates lists
 
-#APOE4
-#time-dependent covariates
-cox2 <- coxph(Surv(tstart, tstop, event) ~ factor(apoe_info99_4ct) +
-                factor(sex) + factor(race_ethn) + factor(edu) + scale(social_origins) + 
-                factor(smoke_ever) + factor(stroke) +
-                strata(study), 
-              data=hrs_surv_dep, id=hhidpn)
-cox2_res <- tidy(cox2, exponentiate = TRUE, conf.int = TRUE) %>% mutate(model = "apoe_4")
-#extract estimates for visuals
-cox2_res_apoe1 <- cox2_res %>% 
-  filter(term=="factor(apoe_info99_4ct)one copy") %>% 
-  pull(estimate) 
-cox2_res_apoe2 <- cox2_res %>% 
-  filter(term=="factor(apoe_info99_4ct)two copies") %>% 
-  pull(estimate) 
+covars_min <- paste(c("factor(race_ethn)",
+                      "factor(sex)",
+                      "factor(edu)",
+                      "factor(stroke)",
+                      "strata(study)"),
+                    collapse = " + ")
 
-#INCARCERATION + APOE4
-#time-dependent covariates
-cox3 <- coxph(Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) +
-                factor(sex) + factor(race_ethn) + factor(edu) + scale(social_origins) + 
-                factor(smoke_ever) + factor(stroke) +
-                strata(study), 
-              data=hrs_surv_dep, id=hhidpn)
-cox3_res <- tidy(cox3, exponentiate = TRUE, conf.int = TRUE) %>% mutate(model = "incar_apoe_4")
+covars_full <- paste(c("factor(race_ethn)",
+                       "factor(sex)",
+                       "factor(edu)",
+                       "factor(social_origins)",
+                       "factor(tbi_ever)",
+                       "scale(alc)",
+                       "scale(bmi)",
+                       "factor(cesd)",
+                       "factor(diab)",
+                       "factor(hear)",
+                       "factor(hibp)",
+                       "scale(income)",
+                       "factor(active)",
+                       "factor(smoke )",
+                       "factor(stroke)",
+                       "strata(study)"),
+                     collapse = " + ")
+
+f11 <- formula(glue("Surv(tstart, tstop, event) ~ {covars_min}"))
+f12 <- formula(glue("Surv(tstart, tstop, event) ~ {covars_full}"))
+f21 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_min}"))
+f22 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_full}"))
+f31 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(apoe_info99_4ct) + {covars_min}"))
+f32 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(apoe_info99_4ct) + {covars_full}"))
+
+cox11 <- coxph(f11, data = hrs_surv_dep)
+cox12 <- coxph(f12, data = hrs_surv_dep)
+cox21 <- coxph(f21, data = hrs_surv_dep)
+cox22 <- coxph(f22, data = hrs_surv_dep)
+cox31 <- coxph(f31, data = hrs_surv_dep)
+cox32 <- coxph(f32, data = hrs_surv_dep)
+
+res_11 <- tidy(cox11, exponentiate = TRUE) %>% mutate(model = "11")
+res_12 <- tidy(cox12, exponentiate = TRUE) %>% mutate(model = "12")
+res_21 <- tidy(cox21, exponentiate = TRUE) %>% mutate(model = "21")
+res_22 <- tidy(cox22, exponentiate = TRUE) %>% mutate(model = "22")
+res_31 <- tidy(cox31, exponentiate = TRUE) %>% mutate(model = "31")
+res_32 <- tidy(cox32, exponentiate = TRUE) %>% mutate(model = "32")
+
+cox_all_res <- bind_rows(res_11,
+                         res_12,
+                         res_21,
+                         res_22,
+                         res_31,
+                         res_32)
 
 
-#INCARCERATION x APOE4
-#time-dependent covariates
-cox4 <- coxph(Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(apoe_info99_4ct) +
-                factor(sex) + factor(race_ethn) + factor(edu) + scale(social_origins) + 
-                factor(smoke_ever) + factor(stroke) +
-                strata(study), 
-              data=hrs_surv_dep, id=hhidpn)
-cox4_res <- tidy(cox4, exponentiate = TRUE, conf.int = TRUE) %>% mutate(model = "incar_x_apoe_4") 
 
-#bind results
-cox_all_res <- bind_rows(cox1_res,
-                         cox2_res,
-                         cox3_res,
-                         cox4_res)
-
-export(c("cox1", "cox2", "cox3", "cox4"), "../output/results/main_results_surv_models.rdata")
+export(c("cox11", "cox12", "cox21", "cox22", "cox31", "cox32"), "../output/results/main_results_surv_models.rdata")
 export(cox_all_res, "../output/results/main_results_surv.csv")
 
 #=Fit and visualize basic survival curves======================================
 
 #INCARCERATION
-surv_ind_incar <- survfit(Surv(study_age, event) ~ incar_ever, data=hrs_surv_ind)
-logrank_incar <- survdiff(Surv(study_age, event) ~ incar_ever, data=hrs_surv_ind) %>% 
+surv_ind_incar <- survfit(Surv(cog_surv_age, event) ~ incar_ever, data=hrs_surv_ind)
+logrank_incar <- survdiff(Surv(cog_surv_age, event) ~ incar_ever, data=hrs_surv_ind) %>% 
   glance() %>% 
   pull(statistic)
 
@@ -142,6 +174,7 @@ survplot1 <- ggsurvplot(surv_ind_incar,
                         censor.shape=NA,
                         palette = c("darkblue", "darkred"),
                         cumcensor = TRUE) 
+survplot1
 
 #median survival age================================#
 closest<-function(var,val){
@@ -160,7 +193,7 @@ median_surv_jail <- survplot1$data.survplot %>%
 #==================================================#
 
 
-logrank_incar <- expression(paste("Log-rank: ", chi^2, "(1)=189.1; ", italic("P"), "<0.001"))
+logrank_incar <- expression(glue("Log-rank: ", chi^2, "(1)=189.1; ", italic("P"), "<0.001"))
 cox_incar <- expression(paste("Cox: HR=1.33; ", italic("P"), "<0.001"))
 
 plot1 <- survplot1$plot +
@@ -188,7 +221,7 @@ plot1 <- survplot1$plot +
                     labels = c("Never-incarcerated", "Incarcerated")) +
   scale_color_manual(name="Lifetime incarceration",
                      values = c("darkblue", "darkred"),
-                    labels = c("Never-incarcerated", "Incarcerated")) 
+                     labels = c("Never-incarcerated", "Incarcerated")) 
 plot1
 
 tab1 <- survplot1$table +
@@ -203,15 +236,15 @@ tab1 <- survplot1$table +
         panel.background = element_rect(color = "black", linewidth = 1))
 
 
-  
+
 survplot_incar <- plot1 / tab1 + plot_layout(heights = c(3,1)) 
 survplot_incar
 ggsave("../output/figures/survplot_incar.png", survplot_incar, width = 15, height = 8)
 
 
 #APOE-4
-surv_ind_apoe4 <- survfit(Surv(study_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind)
-logrank_apoe <- survdiff(Surv(study_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind) %>% 
+surv_ind_apoe4 <- survfit(Surv(cog_surv_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind)
+logrank_apoe <- survdiff(Surv(cog_surv_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind) %>% 
   glance() %>% 
   pull(statistic)
 
@@ -229,6 +262,7 @@ survplot2 <- ggsurvplot(surv_ind_apoe4,
                         palette = c("darkblue", "darkslateblue", "darkred"),
                         cumcensor = TRUE) 
 
+survplot2
 #median survival age================================#
 closest<-function(var,val){
   var[which(abs(var-val)==min(abs(var-val)))] 
@@ -296,7 +330,7 @@ tab2 <- survplot2$table +
         panel.background = element_rect(color = "black", linewidth = 1))
 
 survplot_apoe4 <- plot2 / tab2 + plot_layout(heights = c(3,1)) 
-# survplot_apoe4
+survplot_apoe4
 ggsave("../output/figures/survplot_apoe4.png", survplot_apoe4, width = 15, height = 8)
 
 #=Combine plots========================================#
@@ -335,7 +369,7 @@ combined2 <- plot2 + tab2 + plot1 + tab1 +
   plot_layout(design = design2, tag_level = "new") & 
   # plot_annotation(tag_levels = "A", tag_suffix=".") 
   theme(plot.tag = element_text(size = 24, face = "bold"))
-# combined2
+combined2
 ggsave("../output/figures/survplot_combined2.tiff", combined2, width = 16, height =20, dpi = 700)
 
 #=test of the proportionality assumption=====================================

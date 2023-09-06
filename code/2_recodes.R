@@ -19,66 +19,53 @@ hrs_recodes <- hrs_merged %>%
                                   TRUE ~ NA_real_)) %>% 
   mutate(edu = ifelse(edu_yrs>=12, "hs or more", "less than hs"),
          edu = fct_relevel(edu, "hs or more", "less than hs")) %>% 
-  filter(!study %in% c("HRS", "LBB")) #removed 137,126 rows (53%), 122,510 rows remaining
+  mutate(alc_daily_avg_logc1 = log(alc_daily_avg+1),
+         income_hh_logc1 = log(income_hh+1)) %>% 
+  mutate(cesd_3cat = case_when((cesd==0)      ~ "no symptoms",
+                               (cesd%in% 1:2) ~ "1-2 symptoms",
+                               (cesd>=3)      ~ "3+ symptoms",
+                               TRUE ~ NA_character_),
+         cesd_3cat = fct_relevel(as.factor(cesd_3cat), 
+                                 "no symptoms",
+                                 "1-2 symptoms",
+                                 "3+ symptoms")) %>% 
+  filter(!study=="LBB") #removed 11,635 rows (4%), 269,962 rows remaining
 
 #==============================================================================
-# Create analytic samples: with PGS (W/B), without PGS (ALL)
+# Create analytic samples
 #=============================================================================#
-
-# #analytic sample with PGS
-# hrs_pgs <- hrs_recodes %>% 
-#   select(hhidpn,
-#          study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
-#          starts_with("cog_2cat"),cogfunction,
-#          ad_pgs, starts_with("pc"),
-#          incar_ever, incar_time_3cat,
-#          stroke_ever,
-#          apoe_info99_4ct,
-#          social_origins,
-#          edu_yrs, edu,
-#          smoke_ever
-#   ) %>%
-#   drop_na(-c(dod_yr)) #removed 77,604 rows (63%), 44,906 rows remaining
-
-
-# #check case count
-# hrs_pgs %>% count(cases = n_distinct(hhidpn))
-# # cases     n
-# #  5468 44906
 
 #create analytic sample
 hrs_full <- hrs_recodes %>% 
-  select(hhidpn,
-         study, race_ethn, sex, birthyr, year, age, firstiw, dod_yr,
-         starts_with("cog_2cat"), cogfunction,
-         ad_pgs, starts_with("pc"),
-         incar_ever, incar_time_3cat,
-         stroke_ever,
+  select(hhidpn, year, firstiw, age, 
+         dod_yr,
+         race_ethn, sex, study, birthyr,
+         cog_2cat, cog_2cat_num,
          apoe_info99_4ct,
+         incar_ever, incar_time_3cat,
+         alc_daily_avg_logc1,
+         bmi_combo,
+         cesd_3cat,
+         diab,
+         edu,
+         hear_sr_2cat,
+         hibp,
+         income_hh_logc1,
+         actx_lt_fct,
+         smoke_stat,
          social_origins,
-         edu_yrs, edu,
-         smoke_ever
+         stroke_ever,
+         tbi_ever
   ) %>%
-  drop_na(-c(dod_yr, ad_pgs, starts_with("pc"))) #removed 225,212 rows (80%), 55,355 rows remaining
+  drop_na(-dod_yr) #removed 227,301 rows (84%), 42,661 rows remaining
 
 
 # #check case count
 # hrs_full %>% count(cases = n_distinct(hhidpn))
 # # cases     n
-# #  6951 55355
+# #  6872 42661
 
-#=PGS - Recodes======================================================================
-# residualize for PCs 1-10 BY RACE
 
-hrs_pgs_resid <- hrs_pgs %>% 
-  group_by(race_ethn) %>% 
-  mutate(ad_pgs_resid = residuals(lm(ad_pgs ~ pc1_5a + pc1_5b + pc1_5c + pc1_5d + pc1_5e + 
-                                       pc6_10a + pc6_10b + pc6_10c + pc6_10d + pc6_10e))) %>% 
-  ungroup() %>% 
-  select(-starts_with("pc"))
-
-#export analytic dataframes
-rio::export(hrs_pgs_resid, "hrs_pgs_analytic.rds")
 rio::export(hrs_full, "hrs_full_analytic.rds")
 
 #clean up environment
