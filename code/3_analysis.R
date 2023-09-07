@@ -30,18 +30,19 @@ m32_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(apoe_info
 #   theme_set(theme_classic())
 
 
-m11 <- glmer(m11_base,      data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m12 <- glmer(m12_base,      data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m21 <- glmer(m21_main_eff,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m22 <- glmer(m22_main_eff,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) #first run
-m31 <- glmer(m31_int_eff,   data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m32 <- glmer(m32_int_eff,   data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m11 <- glmer(m11_base,      data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m11 <- glmer(m11_base,      data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m12 <- glmer(m12_base,      data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m21 <- glmer(m21_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m22 <- glmer(m22_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m31 <- glmer(m31_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m32 <- glmer(m32_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #check linear probabily model
 # lmer(m14_int_eff,   data=hrs_full) %>% broom.mixed::tidy(conf.int=TRUE) %>% view()
 
 rio::export(c("m11","m12","m21","m22","m31","m32"),
-       "../output/results/tab3_main_results.rdata")
+            "../output/results/tab3_main_results.rdata")
 
 #table models
 res_11 <- tidy(m11, exponentiate=TRUE) %>% mutate(model="model 11") %>% mutate(glance(m11)) 
@@ -162,6 +163,8 @@ cross_edu <- hrs_full %>%
              .tbl_fun = ~ .x %>% tbl_cross(edu, apoe, margin = NULL))
 
 cross_comb <- tbl_stack(list(cross_sex, cross_race, cross_edu))
+cross_comb
+
 cross_comb %>% 
   as_gt() %>% 
   gtsave("../output/results/tab_s3_crosstabs_sexraceedu.html")
@@ -169,18 +172,21 @@ cross_comb %>%
 #======interaction models with minimal covariates==============================
 
 #sex
-m21_sex_int     <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(sex) + factor(apoe_info99_4ct)*factor(sex) + {covars_min} + (1|hhidpn)"))
-m21_sex <- glmer(m21_sex_int,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m21_sex_int <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(sex) + factor(apoe_info99_4ct)*factor(sex) + {covars_min} + (1|hhidpn)"))
+# m21_sex <- glmer(m21_sex_int,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m21_sex <- glmer(m21_sex_int,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 res_m21_sex <- tidy(m21_sex, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "sex")
 
 #race
 m21_race_int     <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(race_ethn) + factor(apoe_info99_4ct)*factor(race_ethn) + {covars_min} + (1|hhidpn)"))
-m21_race <- glmer(m21_race_int,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m21_race <- glmer(m21_race_int,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m21_race <- glmer(m21_race_int,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 res_m21_race <- tidy(m21_race, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "race") #statistically significant result for Hispanics
 
 #edu
 m21_edu_int     <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(edu) + factor(apoe_info99_4ct)*factor(edu) + {covars_min} + (1|hhidpn)"))
-m21_edu <- glmer(m21_edu_int,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+# m21_edu <- glmer(m21_edu_int,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m21_edu <- glmer(m21_edu_int,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 res_m21_edu <- tidy(m21_edu, exponentiate=TRUE, conf.int=TRUE)  %>% mutate(model = "edu")
 
 #export model objects
@@ -188,8 +194,8 @@ rio::export(c("m21_sex", "m21_race", "m21_edu"),
             "../output/results/strat_results.rdata")
 
 res_strat <- bind_rows(res_m21_sex,
-                           res_m21_race,
-                           res_m21_edu) %>% 
+                       res_m21_race,
+                       res_m21_edu) %>% 
   select(-group)
 
 rio::export(res_strat, "../output/results/tab_s3_results.csv")

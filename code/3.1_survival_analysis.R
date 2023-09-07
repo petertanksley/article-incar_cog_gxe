@@ -30,8 +30,8 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
   
   
   #time-independent 
-  hrs_surv_ind <- hrs_surv %>% 
-    distinct(hhidpn, .keep_all=TRUE) %>% #removed 35,789 rows (84%), 6,872 rows remaining
+  hrs_surv_ind_raw <- hrs_surv %>% 
+    distinct(hhidpn, .keep_all=TRUE) %>% #removed 64,219 rows (85%), 11,365 rows remaining
     select(hhidpn, study, 
            cog_surv_age, cog_first, cog_ever, 
            dod_yr, dod_age,
@@ -42,16 +42,16 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            social_origins,
            tbi_ever
     ) %>% 
-    filter(cog_surv_age>firstiw_age) #removed 214 rows (3%), 6,658 rows remaining
+    filter(cog_surv_age>firstiw_age) #removed 221 rows (2%), 11,144 rows remaining
   
   #format time-independent variables
-  hrs_surv_ind_fmt <- tmerge(data1 = hrs_surv_ind,
-                             data2 = hrs_surv_ind,
+  hrs_surv_ind <- tmerge(data1 = hrs_surv_ind_raw,
+                             data2 = hrs_surv_ind_raw ,
                              id=hhidpn,
                              event=event(cog_surv_age, cog_ever))
   
   #time-dependent
-  hrs_surv_dep <- hrs_surv %>% 
+  hrs_surv_dep_raw <- hrs_surv %>% 
     distinct(hhidpn, study_age, .keep_all=TRUE) %>% 
     select(hhidpn, study_age, 
            cog_2cat, cog_2cat_num,
@@ -67,8 +67,8 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            stroke_ever)
   
   #merge
-  hrs_surv_final <- tmerge(data1 = hrs_surv_ind_fmt,
-                           data2 = hrs_surv_dep,
+  hrs_surv_dep <- tmerge(data1 = hrs_surv_ind,
+                           data2 = hrs_surv_dep_raw,
                            id=hhidpn,
                            alc   =tdc(study_age, alc_daily_avg_logc1),
                            bmi   =tdc(study_age, bmi_combo),
@@ -81,10 +81,10 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
                            smoke =tdc(study_age, smoke_stat),
                            stroke=tdc(study_age, stroke_ever)
   ) %>% 
-    filter(tstart>0) #removed 6,658 rows (18%), 31,186 rows remaining
+    filter(tstart>0) #removed 11,144 rows (17%), 55,994 rows remaining
   
-  export(hrs_surv_final, "hrs_surv_dep.rds")
-  export(hrs_surv_ind_fmt, "hrs_surv_ind.rds")
+  export(hrs_surv_dep, "hrs_surv_dep.rds")
+  export(hrs_surv_ind, "hrs_surv_ind.rds")
 } else {
   
   hrs_surv_ind<- import("hrs_surv_ind.rds")
@@ -157,9 +157,6 @@ export(cox_all_res, "../output/results/main_results_surv.csv")
 
 #INCARCERATION
 surv_ind_incar <- survfit(Surv(cog_surv_age, event) ~ incar_ever, data=hrs_surv_ind)
-logrank_incar <- survdiff(Surv(cog_surv_age, event) ~ incar_ever, data=hrs_surv_ind) %>% 
-  glance() %>% 
-  pull(statistic)
 
 survplot1 <- ggsurvplot(surv_ind_incar,
                         conf.int = TRUE,
@@ -174,7 +171,7 @@ survplot1 <- ggsurvplot(surv_ind_incar,
                         censor.shape=NA,
                         palette = c("darkblue", "darkred"),
                         cumcensor = TRUE) 
-survplot1
+# survplot1
 
 #median survival age================================#
 closest<-function(var,val){
@@ -192,9 +189,16 @@ median_surv_jail <- survplot1$data.survplot %>%
   pull(time)
 #==================================================#
 
+#statistic annotations
+logrank_incar <- survdiff(Surv(cog_surv_age, event) ~ incar_ever, data=hrs_surv_ind) %>% 
+  glance() %>% 
+  pull(statistic)
+logrank_incar_lab <- glue("Log-rank: *&chi;*<sup>2</sup> (1)={round(logrank_incar, 2)}, *P*<0.001")
 
-logrank_incar <- expression(glue("Log-rank: ", chi^2, "(1)=189.1; ", italic("P"), "<0.001"))
-cox_incar <- expression(paste("Cox: HR=1.33; ", italic("P"), "<0.001"))
+cox_incar <- res_21 %>% 
+  filter(term=="factor(incar_ever)Incarcerated") %>% 
+  pull(estimate)
+cox_incar_lab <- glue("Cox: HR={round(cox_incar, 2)}, *P*<0.001")
 
 plot1 <- survplot1$plot +
   labs(y="Survival probability\n(no cognitive impairment)",
@@ -209,20 +213,20 @@ plot1 <- survplot1$plot +
         axis.title.y.left = element_text(size=22, face = "bold", vjust = -15),
         axis.text.y.left = element_text(size = 18),
         axis.text.x.bottom = element_text(size=18)) +
-  geom_segment(aes(x=45, xend=79, y=.5, yend=.5), linewidth=1, linetype="dashed") +
+  geom_segment(aes(x=45, xend=median_surv_nojail, y=.5, yend=.5), linewidth=1, linetype="dashed") +
   geom_segment(aes(x=median_surv_nojail, xend=median_surv_nojail, y=0, yend=.5),  linewidth=1, linetype="dashed") +
   geom_segment(aes(x=median_surv_jail, xend=median_surv_jail, y=0, yend=.5),  linewidth=1, linetype="dashed") +
   scale_y_continuous(expand = c(0,0)) +
   # annotate("text", x=60, y=.25, size=7, fontface="bold", label=expression(atop(textstyle("Log-rank"), paste(italic("p"), "<0.0001")))) +
-  annotate("text", x=48, y=.1, size=7, fontface="bold", label=logrank_incar, hjust=0) +
-  annotate("text", x=48, y=.05, size=7, fontface="bold", label=cox_incar, hjust=0) +
+  geom_richtext(aes(x=48, y=.1, label=logrank_incar_lab), size=7, hjust=0, label.color="white") +
+  geom_richtext(aes(x=48, y=.05, label=cox_incar_lab), size=7, hjust=0, label.color="white") +
   scale_fill_manual(name="Lifetime incarceration",
                     values = c("darkblue", "darkred"),
                     labels = c("Never-incarcerated", "Incarcerated")) +
   scale_color_manual(name="Lifetime incarceration",
                      values = c("darkblue", "darkred"),
                      labels = c("Never-incarcerated", "Incarcerated")) 
-plot1
+# plot1
 
 tab1 <- survplot1$table +
   labs(y="",
@@ -238,15 +242,12 @@ tab1 <- survplot1$table +
 
 
 survplot_incar <- plot1 / tab1 + plot_layout(heights = c(3,1)) 
-survplot_incar
+# survplot_incar
 ggsave("../output/figures/survplot_incar.png", survplot_incar, width = 15, height = 8)
 
 
 #APOE-4
 surv_ind_apoe4 <- survfit(Surv(cog_surv_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind)
-logrank_apoe <- survdiff(Surv(cog_surv_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind) %>% 
-  glance() %>% 
-  pull(statistic)
 
 survplot2 <- ggsurvplot(surv_ind_apoe4,
                         conf.int = TRUE,
@@ -261,8 +262,8 @@ survplot2 <- ggsurvplot(surv_ind_apoe4,
                         censor.shape=NA,
                         palette = c("darkblue", "darkslateblue", "darkred"),
                         cumcensor = TRUE) 
+# survplot2
 
-survplot2
 #median survival age================================#
 closest<-function(var,val){
   var[which(abs(var-val)==min(abs(var-val)))] 
@@ -284,10 +285,19 @@ median_surv_two <- survplot2$data.survplot %>%
   pull(time)
 #==================================================#
 
-logrank_apoe <- expression(paste("Log-rank: ", chi^2, "(2)=45.3; ", italic("P"), "<0.001"))
-cox_apoe1 <- expression(paste("Cox: One copy HR=1.19; ", italic("P"), "<0.001"))
-cox_apoe2 <- expression(paste("Cox: Two copies HR=1.56; ", italic("P"), "<0.001"))
+#statistic annotations
+logrank_apoe <- survdiff(Surv(cog_surv_age, event) ~ apoe_info99_4ct, data=hrs_surv_ind) %>% 
+  glance() %>% 
+  pull(statistic)
+logrank_apoe_lab <- glue("Log-rank: *&chi;*<sup>2</sup> (2)={round(logrank_apoe, 2)}, *P*<0.001")
 
+cox_apoe <- res_21 %>% 
+  filter(grepl("apoe_info99_4ct", term)) %>% 
+  select(estimate)
+cox_apoe1_lab <- glue("Cox: one copy HR={round(cox_apoe[1,], 2)}, *P*<0.001")
+cox_apoe2_lab <- glue("Cox: two copies HR={round(cox_apoe[2,], 2)}, *P*<0.001")
+
+#plot
 plot2 <- survplot2$plot +
   labs(y="Survival probability\n(no cognitive impairment)",
        x="Age",
@@ -301,21 +311,21 @@ plot2 <- survplot2$plot +
         axis.title.y.left = element_text(size=22, face = "bold", vjust = -15),
         axis.text.y.left   = element_text(size = 18),
         axis.text.x.bottom = element_text(size = 18)) +
-  geom_segment(aes(x=45, xend=79, y=.5, yend=.5), linewidth=1, linetype="dashed") +
+  geom_segment(aes(x=45, xend=median_surv_zero, y=.5, yend=.5), linewidth=1, linetype="dashed") +
   geom_segment(aes(x=median_surv_zero, xend=median_surv_zero, y=0, yend=.5),  linewidth=1, linetype="dashed") +
   geom_segment(aes(x=median_surv_one, xend=median_surv_one, y=0, yend=.5),  linewidth=1, linetype="dashed") +
   geom_segment(aes(x=median_surv_two, xend=median_surv_two, y=0, yend=.5),  linewidth=1, linetype="dashed") +
   scale_y_continuous(expand = c(0,0)) +
-  annotate("text", x=48, y=.15, size=7, fontface="bold", hjust=0, label=logrank_apoe) +
-  annotate("text", x=48, y=.1, size=7, fontface="bold", hjust=0, label=cox_apoe1) +
-  annotate("text", x=48, y=.05, size=7, fontface="bold", hjust=0, label=cox_apoe2) +
+  geom_richtext(aes(x=48, y=.15, label=logrank_apoe_lab), label.color="white", size=7, hjust=0) +
+  geom_richtext(aes(x=48, y=.1,  label=cox_apoe1_lab),    label.color="white", size=7, hjust=0) +
+  geom_richtext(aes(x=48, y=.05, label=cox_apoe2_lab),    label.color="white", size=7, hjust=0) +
   scale_fill_manual(name=expression(paste(bolditalic("APOE-\u03b54"), bold(" genotype"))),
                     values = c("darkblue", "darkslateblue", "darkred"),
                     labels = c("Zero copies", "One copy", "Two copies")) +
   scale_color_manual(name=expression(paste(bolditalic("APOE-\u03b54"), bold(" genotype"))),
                      values = c("darkblue",  "darkslateblue", "darkred"),
                      labels = c("Zero copies", "One copy", "Two copies"))
-plot2
+# plot2
 
 tab2 <- survplot2$table +
   labs(y="",
@@ -330,7 +340,7 @@ tab2 <- survplot2$table +
         panel.background = element_rect(color = "black", linewidth = 1))
 
 survplot_apoe4 <- plot2 / tab2 + plot_layout(heights = c(3,1)) 
-survplot_apoe4
+# survplot_apoe4
 ggsave("../output/figures/survplot_apoe4.png", survplot_apoe4, width = 15, height = 8)
 
 #=Combine plots========================================#
@@ -369,17 +379,19 @@ combined2 <- plot2 + tab2 + plot1 + tab1 +
   plot_layout(design = design2, tag_level = "new") & 
   # plot_annotation(tag_levels = "A", tag_suffix=".") 
   theme(plot.tag = element_text(size = 24, face = "bold"))
-combined2
+# combined2
 ggsave("../output/figures/survplot_combined2.tiff", combined2, width = 16, height =20, dpi = 700)
 
 #=test of the proportionality assumption=====================================
 
 #examine Schoenfeld residuals (looking for no time trends)
 #visual examination will be pursued due to size of data (too easy to reject null)
-cox.zph(cox1) %>% ggcoxzph()
-cox.zph(cox2) %>% ggcoxzph()
-cox.zph(cox3) %>% ggcoxzph()
-cox.zph(cox4) %>% ggcoxzph()
+cox.zph(cox11) %>% ggcoxzph()
+cox.zph(cox12) %>% ggcoxzph()
+cox.zph(cox21) %>% ggcoxzph()
+cox.zph(cox22) %>% ggcoxzph()
+cox.zph(cox31) %>% ggcoxzph()
+cox.zph(cox32) %>% ggcoxzph()
 
 
 

@@ -100,17 +100,10 @@ hrs_merged_studyvars <- hrs_merged %>%
   filter(as_numeric(dod_yr)>=year | is.na(dod_yr)) %>% #removed 118,886 rows (22%), 429,682 rows remaining
   filter(as_numeric(dod_yr)>2012 | is.na(dod_yr))  #removed 88,183 rows (21%), 341,499 rows remaining
   # select(-firstiw)
-#drop rows with missing on all columns (ignore time-stable variables)
-var_list <- c("cogfunction",
-              "incar_ever", "incar_time_3cat",
-              "stroke_ever", "smoke_stat",
-              "apoe_info99_4ct")
 
-hrs_merged_studyvars_sparse <- hrs_merged_studyvars %>% 
-  filter(!if_all(all_of(var_list), is.na)) #removed 59,902 rows (18%), 281,597 rows remaining
 
 #export final merged dataframe
-export(hrs_merged_studyvars_sparse, "hrs_merged.rds")
+export(hrs_merged_studyvars, "hrs_merged.rds")
 rm(list=ls())
 
 #=END==========================================================================

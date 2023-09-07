@@ -29,7 +29,7 @@ hrs_recodes <- hrs_merged %>%
                                  "no symptoms",
                                  "1-2 symptoms",
                                  "3+ symptoms")) %>% 
-  filter(!study=="LBB") #removed 11,635 rows (4%), 269,962 rows remaining
+  filter(!study=="LBB") #removed 16,940 rows (5%), 324,559 rows remaining
 
 #==============================================================================
 # Create analytic samples
@@ -43,7 +43,7 @@ hrs_full <- hrs_recodes %>%
          cog_2cat, cog_2cat_num,
          apoe_info99_4ct,
          incar_ever, incar_time_3cat,
-         alc_daily_avg_logc1,
+         alc_daily_avg, alc_daily_avg_logc1,
          bmi_combo,
          cesd_3cat,
          diab,
@@ -57,7 +57,10 @@ hrs_full <- hrs_recodes %>%
          stroke_ever,
          tbi_ever
   ) %>%
-  drop_na(-dod_yr) #removed 227,301 rows (84%), 42,661 rows remaining
+  drop_na(-dod_yr) #removed 248,975 rows (77%), 75,584 rows remaining
+
+test <- hrs_recodes %>% 
+  filter(study=="HRS") 
 
 
 # #check case count
