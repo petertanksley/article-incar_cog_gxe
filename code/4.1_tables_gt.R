@@ -19,16 +19,16 @@ hrs_labs <- hrs %>%
          cog_2cat, 
          apoe_info99_4ct,
          incar_ever, incar_time_3cat,
-         alc_daily_avg, alc_daily_avg_logc1,
+         alc_daily_avg, 
          bmi_combo,
          cesd_3cat,
          diab,
          edu,
          hear_sr_2cat,
          hibp,
-         income_hh_logc1,
+         income_hh_10k,
          actx_lt_fct,
-         smoke_stat,
+         smoke_first_iw,
          social_origins,
          stroke_ever,
          tbi_ever,
@@ -36,10 +36,8 @@ hrs_labs <- hrs %>%
   mutate(incar_ever = fct_recode(incar_ever, 
                                  "Yes" = "Incarcerated", 
                                  "No" = "Not Incarcerated"),
-         smoke_ever = fct_recode(as.factor(smoke_stat),
-                                 "Yes" = "1",
-                                 "No" = "0"),
-         smoke_ever = fct_relevel(smoke_ever, "Yes"),
+         smoke_first_iw = ifelse(smoke_first_iw==1, "Yes", "No"),
+         smoke_first_iw = fct_relevel(smoke_first_iw, "Yes"),
          edu = fct_recode(edu, 
                           "High school or more" = "hs or more",
                           "Less than high school" = "less than hs"),
@@ -50,66 +48,133 @@ hrs_labs <- hrs %>%
          stroke_ever=fct_recode(as_factor(stroke_ever), "No"="0", "Yes"="1"),
          stroke_ever = fct_relevel(stroke_ever, "Yes"),
          diab = ifelse(diab=="yes", "Diagnosed", "Never diagnosed"),
-         diab = fct_relevel(as.factor(diab), "Never diagnosed")) %>% 
-  # mutate(study = fct_drop(study)) %>%
+         diab = fct_relevel(as.factor(diab), "Never diagnosed"),
+         hear_sr_2cat = ifelse(hear_sr_2cat=="normal", "Normal", "Impaired"),
+         hear_sr_2cat = fct_relevel(as.factor(hear_sr_2cat), "Normal", "Impaired"),
+         hibp = ifelse(hibp=="yes", "Yes", "No"),
+         hibp = fct_relevel(as.factor(hibp), "Yes", "No"),
+         tbi_ever = ifelse(tbi_ever=="yes", "Yes", "No"),
+         tbi_ever = fct_relevel(as.factor(tbi_ever), "Yes", "No"),
+         study = case_when((study=="AHEAD") ~ "AHEAD (<1924)",
+                           (study=="CODA")  ~ "CODA (1924-30)",
+                           (study=="HRS")   ~ "HRS (1931-41)",
+                           (study=="WB")    ~ "WB (1942-47)",
+                           (study=="EBB")   ~ "EBB (1948-53)",
+                           (study=="MBB")   ~ "MBB (1954-59)"),
+         study = fct_relevel(as.factor(study), 
+                             "AHEAD (<1924)",
+                             "CODA (1924-30)",
+                             "HRS (1931-41)",
+                             "WB (1942-47)",
+                             "EBB (1948-53)",
+                             "MBB (1954-59)")) %>% 
+  mutate(study = fct_drop(study)) %>%
   mutate(social_origins = as_numeric(social_origins)) %>% 
-  var_labels(study           = "HRS cohort", 
+  var_labels(study           = "HRS cohort (birth year)",             #time-invariant 
              sex             = "Self-reported sex", 
              race_ethn       = "Race/Ethnicity",
              edu             = "HS completion",
-             age             = "Age",
-             year            = "Study year",
-             cog_2cat        = "Cognitive function",
-             incar_ever      = "Lifetime incarceration", 
-             stroke_ever     = "History of stroke",
-             smoke_ever      = "Ever smoker",
+             incar_ever      = "Lifetime incarceration",
+             incar_time_3cat = "Lifetime incarceration duration",
              apoe_info99_4ct = "APOE-4 count",
-             social_origins  = "Social origins index"
+             smoke_first_iw  = "Smoking status at baseline",
+             social_origins  = "Social origins index",
+             tbi_ever        = "Childhood TBI",
+             cog_2cat        = "Cognitive function",     #time-varying
+             year            = "Study year",
+             age             = "Age",
+             income_hh_10k   = "Household income (10K)",
+             alc_daily_avg   = "Alcohol (daily avg.)",
+             bmi_combo       = "Body-mass index",
+             cesd_3cat       = "Depressive symptoms",
+             diab            = "Diabetes",
+             hear_sr_2cat    = "Hearing difficulty",
+             hibp            = "Hypertension",
+             actx_lt_fct     = "Physical activity (light)",
+             stroke_ever     = "Stroke status"
   ) 
 
 #time-independent variables
 tab1_top <- hrs_labs %>% 
-  select(-c(age, year, cog_2cat, stroke_ever, ad_pgs)) %>% 
-  # mutate(ad_pgs_blk = ifelse(race_ethn=="Black", ad_pgs, NA),
-  #        ad_pgs_wht = ifelse(race_ethn=="White", ad_pgs, NA)) %>% 
-  # var_labels(ad_pgs_blk = "Polygenic Index for AD (Black)",
-  #            ad_pgs_wht = "Polygenic Index for AD (White)") %>% 
+  select(hhidpn,
+         incar_time_3cat,
+         apoe_info99_4ct,
+         sex,
+         race_ethn,
+         edu,
+         incar_ever,
+         smoke_first_iw,
+         social_origins ,
+         tbi_ever,
+         study) %>% 
   distinct(hhidpn, .keep_all=TRUE) %>% 
   select(-c(hhidpn, 
-            # ad_pgs
-            )) %>% 
+  )) %>% 
   tbl_summary(by=incar_ever,
-              type = list(c(#ad_pgs_blk, ad_pgs_wht, 
-                            social_origins) ~ "continuous",
-                          c(study, sex, race_ethn, edu, apoe_info99_4ct, smoke_ever) ~ "categorical"),
+              type = list(c(social_origins) ~ "continuous",
+                          c(incar_time_3cat, study, sex, race_ethn, edu, apoe_info99_4ct, smoke_first_iw, tbi_ever) ~ "categorical"),
               statistic = all_continuous() ~ "{mean} ({sd})") %>% 
-  add_p() %>% 
-  bold_p() %>% 
-  add_overall() %>% 
+  add_p(include=-incar_time_3cat) %>%
+  # add_p(test.args = all_tests("fisher.test") ~ list(simulate.p.value = TRUE)) %>% 
+  bold_p() %>%
+  add_overall() %>%
   modify_header(label ~ "**Variable**") %>%
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**") 
-  # remove_row_type(variables = c(ad_pgs_blk, ad_pgs_wht), type = "missing")
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**")
+tab1_top
+
+gtsave(as_gt(tab1_top), "../output/results/tab1_top_descriptives.html")
+
 
 #time-dependent variables
 tab1_bottom <- hrs_labs %>%
-  select(hhidpn, age, cog_2cat, stroke_ever, year, incar_ever) %>%
+  select(hhidpn, 
+         incar_ever,
+         age, 
+         cog_2cat,     
+         income_hh_10k,
+         alc_daily_avg,
+         bmi_combo,    
+         cesd_3cat,    
+         diab,         
+         hear_sr_2cat,
+         hibp,         
+         actx_lt_fct,  
+         stroke_ever,
+         year) %>%
   mutate(year=as_factor(year)) %>%
   group_by(hhidpn) %>% 
-  mutate(age=mean(as.double(age))) %>% 
-  var_labels(age = "Age (mean)") %>% 
+  mutate(across(c(age, income_hh_10k, alc_daily_avg, bmi_combo), ~mean(.))) %>% 
+  var_labels(age = "Age",
+             income_hh_10k = "Household income (10K)", 
+             alc_daily_avg = "Alcohol (daily avg.)", 
+             bmi_combo     = "BMI") %>% 
   ungroup() %>% 
   tbl_summary(by=incar_ever,
-              type = list(age ~ "continuous",
-                          stroke_ever ~ "categorical"),
+              type = list(c(age, 
+                            income_hh_10k, 
+                            alc_daily_avg, 
+                            bmi_combo) ~ "continuous",
+                          c(cesd_3cat,    
+                            diab,         
+                            hear_sr_2cat,
+                            hibp,         
+                            actx_lt_fct,  
+                            stroke_ever) ~ "categorical"),
               statistic = all_continuous() ~ "{mean} ({sd})",
               include = -hhidpn,
               digits = all_continuous() ~ 2) %>%
-  add_p(include=-c(stroke_ever, cog_2cat)) %>%
+  add_p(include=c(age, year, 
+                  income_hh_10k, 
+                  alc_daily_avg, 
+                  bmi_combo)) %>%
   bold_p() %>% 
   add_overall() %>%
   modify_header(label ~ "**Variable**") %>% 
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**") 
-  
+tab1_bottom
+
+gtsave(as_gt(tab1_bottom), "../output/results/tab1_bottom_descriptives.html")
+
 
 #stack tables
 tab1_combined <- tbl_stack(tbls = list(tab1_top, tab1_bottom),
@@ -118,8 +183,16 @@ tab1_combined <- tbl_stack(tbls = list(tab1_top, tab1_bottom),
   modify_caption('**Table 1**. Individual and observation-level descriptive statistics of the Health and Retirement Study.')
 tab1_combined
 
+#export .html table
+gtsave(as_gt(tab1_combined), "../output/results/tab1_descriptives.html")
 
-#get pvalues for cognitive status and history of stroke
+#export .docx table
+tab1_combined %>%
+  as_flex_table() %>%
+  flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
+
+#=====get pvalues 
+#=cognitive function
 cog_pval <- glmer(cog_2cat_num ~ factor(incar_ever) + (1|hhidpn), 
       data=hrs, 
       family=binomial, 
@@ -128,8 +201,9 @@ cog_pval <- glmer(cog_2cat_num ~ factor(incar_ever) + (1|hhidpn),
   filter(term=="factor(incar_ever)Incarcerated") %>% 
   pull(p.value)
 # cog_pval
-# [1] 1.219479e-18
+# [1] 2.18628e-22
 
+#stroke
 strok_pval <- glmer(stroke_ever ~ factor(incar_ever) + (1|hhidpn), 
                   data=hrs, 
                   family=binomial, 
@@ -140,13 +214,42 @@ strok_pval <- glmer(stroke_ever ~ factor(incar_ever) + (1|hhidpn),
 # strok_pval
 # [1] 0.2276284
 
-#export .html table
-gtsave(as_gt(tab1_combined), "../output/results/tab1_descriptives.html")
+# diabetes
+diab_pval <- glmer(factor(diab) ~ factor(incar_ever) + (1|hhidpn), 
+                    data=hrs, 
+                    family=binomial, 
+                    control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) %>% 
+  tidy() %>% 
+  filter(term=="factor(incar_ever)Incarcerated") %>% 
+  pull(p.value)
+# diab_pval
+# [1] 0.008436289
 
-#export .docx table
-tab1_combined %>%
-  as_flex_table() %>%
-  flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
+# hearing
+hear_pval <- glmer(factor(hear_sr_2cat) ~ factor(incar_ever) + (1|hhidpn), 
+                   data=hrs, 
+                   family=binomial, 
+                   control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) %>% 
+  tidy() %>% 
+  filter(term=="factor(incar_ever)Incarcerated") %>% 
+  pull(p.value)
+# hear_pval
+# [1] 2.61667e-15
+
+# hypertension
+hibp_pval <- glmer(factor(hibp) ~ factor(incar_ever) + (1|hhidpn), 
+                   data=hrs, 
+                   family=binomial, 
+                   control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) %>% 
+  tidy() %>% 
+  filter(term=="factor(incar_ever)Incarcerated") %>% 
+  pull(p.value)
+# hibp_pval
+# [1] 2.945989e-05
+
+p_load(ordinal)
+dep_pval <- clmm(cesd_3cat ~ factor(incar_ever) + (1|hhidpn),
+                 data = hrs)
 
 
 #=Table 2 - Main results=======================================================

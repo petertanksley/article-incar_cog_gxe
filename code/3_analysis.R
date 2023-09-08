@@ -7,7 +7,7 @@ hrs_full <- import("hrs_full_analytic.rds")
 covars_min <- "factor(sex) + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu)"
 covars_full <- "factor(sex) + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu) +
 scale(alc_daily_avg_logc1) + scale(bmi_combo) + factor(cesd_3cat) + factor(diab) + factor(hear_sr_2cat) +
-factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_stat) + scale(social_origins) + factor(tbi_ever)"
+factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_first_iw) + scale(social_origins) + factor(tbi_ever)"
 
 #set model formulas 
 m11_base     <- formula(glue("cog_2cat_num ~ {covars_min} + (1|hhidpn)"))
@@ -88,23 +88,10 @@ m52_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat)*factor(apoe
 
 #run models 
 
+m41 <- glmer(m41_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 m42 <- glmer(m42_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) 
-m42_test <- glmer(m42_main_eff,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) 
-test <- bind_rows(tidy(m41, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model="base"),
-                  tidy(m41_test, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model="test")) %>%
-  filter(!grepl("study|Intercept", term))
-
-ggplot(test, aes(estimate, term, col=model)) +
-  geom_point(position = position_dodge(width = .5)) +
-  geom_errorbarh(aes(xmin=conf.low, xmax=conf.high), position = position_dodge(width = .5)) +
-  theme_set(theme_classic())
-
-
-
-m41 <- glmer(m41_main_eff,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m42 <- glmer(m42_main_eff,  data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) 
-m51 <- glmer(m51_int_eff,   data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m52 <- glmer(m52_int_eff,   data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m51 <- glmer(m51_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m52 <- glmer(m52_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #export model objects
 rio::export(c("m41", "m42", "m51", "m52"),

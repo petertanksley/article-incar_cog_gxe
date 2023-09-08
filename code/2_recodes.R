@@ -20,16 +20,19 @@ hrs_recodes <- hrs_merged %>%
   mutate(edu = ifelse(edu_yrs>=12, "hs or more", "less than hs"),
          edu = fct_relevel(edu, "hs or more", "less than hs")) %>% 
   mutate(alc_daily_avg_logc1 = log(alc_daily_avg+1),
-         income_hh_logc1 = log(income_hh+1)) %>% 
-  mutate(cesd_3cat = case_when((cesd==0)      ~ "no symptoms",
+         income_hh_logc1 = log(income_hh+1),
+         income_hh_10k = ifelse(income_hh<1, 0, income_hh/10000)) %>% 
+  mutate(cesd_3cat = case_when((cesd==0)      ~ "No symptoms",
                                (cesd%in% 1:2) ~ "1-2 symptoms",
                                (cesd>=3)      ~ "3+ symptoms",
                                TRUE ~ NA_character_),
          cesd_3cat = fct_relevel(as.factor(cesd_3cat), 
-                                 "no symptoms",
+                                 "No symptoms",
                                  "1-2 symptoms",
                                  "3+ symptoms")) %>% 
-  filter(!study=="LBB") #removed 16,940 rows (5%), 324,559 rows remaining
+  
+  filter(!study=="LBB") %>% #removed 16,940 rows (5%), 324,559 rows remaining
+  mutate(study = fct_drop(study))
 
 #==============================================================================
 # Create analytic samples
@@ -50,23 +53,19 @@ hrs_full <- hrs_recodes %>%
          edu,
          hear_sr_2cat,
          hibp,
-         income_hh_logc1,
+         income_hh_logc1, income_hh_10k,
          actx_lt_fct,
-         smoke_stat,
+         smoke_first_iw,
          social_origins,
          stroke_ever,
          tbi_ever
   ) %>%
   drop_na(-dod_yr) #removed 248,975 rows (77%), 75,584 rows remaining
 
-test <- hrs_recodes %>% 
-  filter(study=="HRS") 
-
-
 # #check case count
 # hrs_full %>% count(cases = n_distinct(hhidpn))
 # # cases     n
-# #  6872 42661
+# #  11365 75584
 
 
 rio::export(hrs_full, "hrs_full_analytic.rds")

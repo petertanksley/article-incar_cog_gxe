@@ -40,6 +40,7 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            incar_ever, incar_time_3cat,
            edu,
            social_origins,
+           smoke_first_iw,
            tbi_ever
     ) %>% 
     filter(cog_surv_age>firstiw_age) #removed 221 rows (2%), 11,144 rows remaining
@@ -63,7 +64,6 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            hibp,
            income_hh_logc1,
            actx_lt_fct,
-           smoke_stat,
            stroke_ever)
   
   #merge
@@ -78,7 +78,6 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
                            hibp  =tdc(study_age, hibp),
                            income=tdc(study_age, income_hh_logc1),
                            active=tdc(study_age, actx_lt_fct),
-                           smoke =tdc(study_age, smoke_stat),
                            stroke=tdc(study_age, stroke_ever)
   ) %>% 
     filter(tstart>0) #removed 11,144 rows (17%), 55,994 rows remaining
@@ -109,13 +108,13 @@ covars_full <- paste(c("factor(race_ethn)",
                        "factor(tbi_ever)",
                        "scale(alc)",
                        "scale(bmi)",
+                       "factor(smoke_first_iw)",
                        "factor(cesd)",
                        "factor(diab)",
                        "factor(hear)",
                        "factor(hibp)",
                        "scale(income)",
                        "factor(active)",
-                       "factor(smoke )",
                        "factor(stroke)",
                        "strata(study)"),
                      collapse = " + ")
