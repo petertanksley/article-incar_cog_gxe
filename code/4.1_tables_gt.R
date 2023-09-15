@@ -31,8 +31,7 @@ hrs_labs <- hrs %>%
          smoke_first_iw,
          social_origins,
          stroke_ever,
-         tbi_ever,
-  ) %>% 
+         tbi_ever) %>% 
   mutate(incar_ever = fct_recode(incar_ever, 
                                  "Yes" = "Incarcerated", 
                                  "No" = "Not Incarcerated"),
@@ -142,13 +141,13 @@ tab1_bottom <- hrs_labs %>%
          stroke_ever,
          year) %>%
   mutate(year=as_factor(year)) %>%
-  group_by(hhidpn) %>% 
-  mutate(across(c(age, income_hh_10k, alc_daily_avg, bmi_combo), ~mean(.))) %>% 
-  var_labels(age = "Age",
-             income_hh_10k = "Household income (10K)", 
-             alc_daily_avg = "Alcohol (daily avg.)", 
-             bmi_combo     = "BMI") %>% 
-  ungroup() %>% 
+  # group_by(hhidpn) %>%
+  # mutate(across(c(age, income_hh_10k, alc_daily_avg, bmi_combo), ~mean(.))) %>%
+  # var_labels(age = "Age",
+  #            income_hh_10k = "Household income (10K)",
+  #            alc_daily_avg = "Alcohol (daily avg.)",
+  #            bmi_combo     = "BMI") %>%
+  # ungroup() %>%
   tbl_summary(by=incar_ever,
               type = list(c(age, 
                             income_hh_10k, 
@@ -159,18 +158,16 @@ tab1_bottom <- hrs_labs %>%
                             hear_sr_2cat,
                             hibp,         
                             actx_lt_fct,  
-                            stroke_ever) ~ "categorical"),
+                            stroke_ever,
+                            year) ~ "categorical"),
               statistic = all_continuous() ~ "{mean} ({sd})",
               include = -hhidpn,
               digits = all_continuous() ~ 2) %>%
-  add_p(include=c(age, year, 
-                  income_hh_10k, 
-                  alc_daily_avg, 
-                  bmi_combo)) %>%
-  bold_p() %>% 
   add_overall() %>%
   modify_header(label ~ "**Variable**") %>% 
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**") 
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Ever incarcerated?**") %>% 
+  add_p(include=year) %>% 
+  bold_p()
 tab1_bottom
 
 gtsave(as_gt(tab1_bottom), "../output/results/tab1_bottom_descriptives.html")
@@ -247,9 +244,18 @@ hibp_pval <- glmer(factor(hibp) ~ factor(incar_ever) + (1|hhidpn),
 # hibp_pval
 # [1] 2.945989e-05
 
-p_load(ordinal)
-dep_pval <- clmm(cesd_3cat ~ factor(incar_ever) + (1|hhidpn),
-                 data = hrs)
+#continuous, time-dependent
+contin_timedep <- hrs_labs %>% 
+  select(hhidpn, incar_ever, cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo) %>% 
+  group_by(hhidpn) %>% 
+  mutate(across(c(cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo), ~as.numeric(.)),
+         across(c(cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo), ~mean(.))) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  tbl_summary(include = -hhidpn,
+              by=incar_ever) %>% 
+  add_p()
+contin_timedep
 
 
 #=Table 2 - Main results=======================================================

@@ -152,6 +152,21 @@ cox_all_res <- bind_rows(res_11,
 export(c("cox11", "cox12", "cox21", "cox22", "cox31", "cox32"), "../output/results/main_results_surv_models.rdata")
 export(cox_all_res, "../output/results/main_results_surv.csv")
 
+#=test of the proportionality assumption=====================================
+
+#examine Schoenfeld residuals (looking for no time trends)
+#visual examination will be pursued due to size of data (too easy to reject null)
+cox.zph(cox11) %>% ggcoxzph()
+cox.zph(cox12) %>% ggcoxzph()
+cox.zph(cox21) %>% ggcoxzph()
+cox.zph(cox22) %>% ggcoxzph()
+cox.zph(cox31) %>% ggcoxzph()
+cox.zph(cox32) %>% ggcoxzph()
+
+#=test-stratified models=====================================
+cox21 <- coxph(f21, data = hrs_surv_dep)
+
+
 #=Fit and visualize basic survival curves======================================
 
 #INCARCERATION
@@ -381,16 +396,7 @@ combined2 <- plot2 + tab2 + plot1 + tab1 +
 # combined2
 ggsave("../output/figures/survplot_combined2.tiff", combined2, width = 16, height =20, dpi = 700)
 
-#=test of the proportionality assumption=====================================
 
-#examine Schoenfeld residuals (looking for no time trends)
-#visual examination will be pursued due to size of data (too easy to reject null)
-cox.zph(cox11) %>% ggcoxzph()
-cox.zph(cox12) %>% ggcoxzph()
-cox.zph(cox21) %>% ggcoxzph()
-cox.zph(cox22) %>% ggcoxzph()
-cox.zph(cox31) %>% ggcoxzph()
-cox.zph(cox32) %>% ggcoxzph()
 
 
 

@@ -4,7 +4,7 @@ hrs_full <- import("hrs_full_analytic.rds")
 
 #=Main analysis================================================================
 
-covars_min <- "factor(sex) + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu)"
+covars_min <- "sex + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu)"
 covars_full <- "factor(sex) + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu) +
 scale(alc_daily_avg_logc1) + scale(bmi_combo) + factor(cesd_3cat) + factor(diab) + factor(hear_sr_2cat) +
 factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_first_iw) + scale(social_origins) + factor(tbi_ever)"
@@ -82,31 +82,19 @@ cross_incar_time
 
 #set model formulas 
 m41_main_eff <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat) + factor(apoe_info99_4ct) + {covars_min}  + (1|hhidpn)"))
-m42_main_eff <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat) + factor(apoe_info99_4ct) + {covars_full} + (1|hhidpn)"))
 m51_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat)*factor(apoe_info99_4ct) + {covars_min}  + (1|hhidpn)"))
-m52_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat)*factor(apoe_info99_4ct) + {covars_full} + (1|hhidpn)"))
 
 #run models 
 
 m41 <- glmer(m41_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m42 <- glmer(m42_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5))) 
-m51 <- glmer(m51_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m52 <- glmer(m52_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #export model objects
-rio::export(c("m41", "m42", "m51", "m52"),
+rio::export("m41",
             "../output/results/incar_time_results.rdata")
 
 #tidy results
 res_m41 <- tidy(m41, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "model 41")
-res_m42 <- tidy(m42, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "model 42")
-res_m51 <- tidy(m51, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "model 51")
-res_m52 <- tidy(m52, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "model 52")
 
-res_incar_time <- bind_rows(res_m41,
-                            res_m42,
-                            res_m51,
-                            res_m52)
 
 
 
