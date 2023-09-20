@@ -97,7 +97,6 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
 covars_min <- paste(c("factor(race_ethn)",
                       "factor(sex)",
                       "factor(edu)",
-                      "factor(stroke)",
                       "strata(study)"),
                     collapse = " + ")
 
@@ -119,8 +118,8 @@ covars_full <- paste(c("factor(race_ethn)",
                        "strata(study)"),
                      collapse = " + ")
 
-f11 <- formula(glue("Surv(tstart, tstop, event) ~ {covars_min}"))
-f12 <- formula(glue("Surv(tstart, tstop, event) ~ {covars_full}"))
+f11 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + {covars_min}"))
+f12 <- formula(glue("Surv(tstart, tstop, event) ~ factor(apoe_info99_4ct) + {covars_min}"))
 f21 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_min}"))
 f22 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_full}"))
 f31 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(apoe_info99_4ct) + {covars_min}"))
@@ -132,6 +131,8 @@ cox21 <- coxph(f21, data = hrs_surv_dep)
 cox22 <- coxph(f22, data = hrs_surv_dep)
 cox31 <- coxph(f31, data = hrs_surv_dep)
 cox32 <- coxph(f32, data = hrs_surv_dep)
+
+export(c("cox11", "cox12", "cox21", "cox22", "cox31", "cox32"), "../output/results/main_results_surv_models.rdata")
 
 res_11 <- tidy(cox11, exponentiate = TRUE) %>% mutate(model = "11")
 res_12 <- tidy(cox12, exponentiate = TRUE) %>% mutate(model = "12")
@@ -148,8 +149,6 @@ cox_all_res <- bind_rows(res_11,
                          res_32)
 
 
-
-export(c("cox11", "cox12", "cox21", "cox22", "cox31", "cox32"), "../output/results/main_results_surv_models.rdata")
 export(cox_all_res, "../output/results/main_results_surv.csv")
 
 #=test of the proportionality assumption=====================================
