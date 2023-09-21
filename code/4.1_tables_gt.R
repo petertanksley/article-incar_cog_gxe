@@ -337,22 +337,29 @@ surv_results <- import_list("../output/results/main_results_surv_models.rdata")
 list2env(surv_results, .GlobalEnv)
 rm(surv_results)
 
-tab_s2_cox1 <- tbl_regression(cox2, exponentiate = TRUE,
+tab_cox11 <- tbl_regression(cox11, exponentiate = TRUE,
+                               include = "factor(incar_ever)Incarcerated",
+                               label = list("factor(incar_ever)Incarcerated" = "Lifetime Incarceration"))
+tab_cox12 <- tbl_regression(cox12, exponentiate = TRUE,
                               include=c("factor(apoe_info99_4ct)one copy",
                                         "factor(apoe_info99_4ct)two copies"),
                               label = list("factor(apoe_info99_4ct)one copy" = "One APOE-4 allele",
                                            "factor(apoe_info99_4ct)two copies" = "Two APOE-4 alleles"))
-tab_s2_cox2 <- tbl_regression(cox1, exponentiate = TRUE,
-               include = "factor(incar_ever)Incarcerated",
-               label = list("factor(incar_ever)Incarcerated" = "Lifetime Incarceration"))
-tab_s2_cox3 <- tbl_regression(cox3, exponentiate = TRUE,
+tab_cox21 <- tbl_regression(cox21, exponentiate = TRUE,
                               include=c("factor(apoe_info99_4ct)one copy",
                                         "factor(apoe_info99_4ct)two copies",
                                         "factor(incar_ever)Incarcerated"),
                               label = list("factor(apoe_info99_4ct)one copy" = "One APOE-4 allele",
                                            "factor(apoe_info99_4ct)two copies" = "Two APOE-4 alleles",
                                            "factor(incar_ever)Incarcerated" = "Lifetime Incarceration"))
-tab_s2_cox4 <- tbl_regression(cox4, exponentiate = TRUE,
+tab_cox22 <- tbl_regression(cox22, exponentiate = TRUE,
+                              include=c("factor(apoe_info99_4ct)one copy",
+                                        "factor(apoe_info99_4ct)two copies",
+                                        "factor(incar_ever)Incarcerated"),
+                              label = list("factor(apoe_info99_4ct)one copy" = "One APOE-4 allele",
+                                           "factor(apoe_info99_4ct)two copies" = "Two APOE-4 alleles",
+                                           "factor(incar_ever)Incarcerated" = "Lifetime Incarceration"))
+tab_cox31 <- tbl_regression(cox31, exponentiate = TRUE,
                               include=c("factor(apoe_info99_4ct)one copy",
                                         "factor(apoe_info99_4ct)two copies",
                                         "factor(incar_ever)Incarcerated",
@@ -365,11 +372,27 @@ tab_s2_cox4 <- tbl_regression(cox4, exponentiate = TRUE,
                                            "Lifetime Incarceration*One APOE-4 allele",
                                          "factor(incar_ever)Incarcerated:factor(apoe_info99_4ct)two copies" = 
                                            "Lifetime Incarceration*Two APOE-4 alleles"))
+tab_cox32 <- tbl_regression(cox32, exponentiate = TRUE,
+                               include=c("factor(apoe_info99_4ct)one copy",
+                                         "factor(apoe_info99_4ct)two copies",
+                                         "factor(incar_ever)Incarcerated",
+                                         "factor(incar_ever)Incarcerated:factor(apoe_info99_4ct)one copy",
+                                         "factor(incar_ever)Incarcerated:factor(apoe_info99_4ct)two copies"),
+                               label=list("factor(apoe_info99_4ct)one copy" = "One APOE-4 allele",
+                                          "factor(apoe_info99_4ct)two copies" = "Two APOE-4 alleles",
+                                          "factor(incar_ever)Incarcerated" = "Lifetime Incarceration",
+                                          "factor(incar_ever)Incarcerated:factor(apoe_info99_4ct)one copy" = 
+                                            "Lifetime Incarceration*One APOE-4 allele",
+                                          "factor(incar_ever)Incarcerated:factor(apoe_info99_4ct)two copies" = 
+                                            "Lifetime Incarceration*Two APOE-4 alleles"))
+
 #group summary tables
-tab_s2_mods <- list(tab_s2_cox1,
-                    tab_s2_cox2,
-                    tab_s2_cox3,
-                    tab_s2_cox4)
+tab_mods <- list(tab_cox11,
+                    tab_cox12,
+                    tab_cox21,
+                    tab_cox22,
+                    tab_cox31,
+                    tab_cox32)
 
 #function to update tables
 tab_updates <- function(x){
@@ -381,19 +404,22 @@ tab_updates <- function(x){
 }
 
 #apply updates
-tab_s2_mods_update <- lapply(tab_s2_mods, tab_updates)
+tab_mods_update <- lapply(tab_mods, tab_updates)
 
 #merge models
-tab_s2_all <- tbl_merge(tab_s2_mods_update, tab_spanner = paste("Model S1.", 1:4, sep = "")) %>% 
+tab_mods_all <- tbl_merge(tab_mods_update, tab_spanner = paste("Model S1.", 1:6, sep = "")) %>% 
   modify_caption(glue("**Table S1.** Cox proportional hazard model of lifetime incarceration and APOE-4 genotype on first cognitive impairment.")) %>% 
-  modify_footnote(label ~ "All models adjusted for sex, race/ethnicity, high school completion, smoking history, stroke history, and social origins index. All models were stratified by HRS cohort.")
-tab_s2_all
+  modify_footnote(label ~ "All models also adjusted for age, sex, race/ethnicity, high school completion, and HRS cohort. 
+                  Fully adjusted models also adjusted for stroke status, alcohol intake, BMI, depression symptoms, diabetes status, 
+                  hearing difficulty, hypertension, household income, (light) physical activity level, smoking history, 
+                  childhood financial hardship, and childhood traumatic brain injury.")
+tab_mods_all
 
 
 #save out table
-tab_s2_all %>%
+tab_mods_all %>%
   as_gt() %>%
-  gtsave("../output/results/tab_s2_all.html")
+  gtsave("../output/results/tab_s1_all.html")
 
 # tab_s1_combined %>%
 #   as_flex_table() %>%
