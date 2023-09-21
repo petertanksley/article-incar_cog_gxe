@@ -123,6 +123,7 @@ cross_race <- hrs_full %>%
   var_labels(race_ethn = "Race/ethnicity") %>% 
   tbl_strata(strata = incar_ever,
              .tbl_fun = ~ .x %>% tbl_cross(race_ethn, apoe, margin = NULL))
+
 #edu
 cross_edu <- hrs_full %>% 
   distinct(hhidpn, .keep_all=TRUE) %>%
@@ -156,8 +157,12 @@ m21_race_int     <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(race_
 hrs_full_race <- hrs_full %>% 
   filter(!race_ethn %in% c("Hispanic", "Other")) %>% #removed 9,102 rows (12%), 66,482 rows remaining (cases= 9819)
   mutate(race_ethn = fct_drop(race_ethn))
-m21_race <- glmer(m21_race_int,  data=hrs_full_race, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-res_m21_race <- tidy(m21_race, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "race") 
+
+
+m21_race_main <- glmer(m21_main_eff,  data=hrs_full_race, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m21_race_int <- glmer(m21_race_int,  data=hrs_full_race, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+res_m21_race_main <- tidy(m21_race_main, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "race") 
+res_m21_race_int <- tidy(m21_race_int, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "race") 
 
 #edu
 m21_edu_int     <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(edu) + factor(apoe_info99_4ct)*factor(edu) + {covars_min} + (1|hhidpn)"))
@@ -165,11 +170,13 @@ m21_edu <- glmer(m21_edu_int,  data=hrs_full, family=poisson(link="log"), contro
 res_m21_edu <- tidy(m21_edu, exponentiate=TRUE, conf.int=TRUE)  %>% mutate(model = "edu")
 
 #export model objects
-rio::export(c("m21_sex", "m21_race", "m21_edu"),
+rio::export(c("m21", "m21_sex", "m21_race_main", "m21_race_int", "m21_edu"),
             "../output/results/strat_results.rdata")
 
-res_strat <- bind_rows(res_m21_sex,
-                       res_m21_race,
+res_strat <- bind_rows(res_21,
+                       res_m21_sex,
+                       res_m21_race_main,
+                       res_m21_race_int,
                        res_m21_edu) %>% 
   select(-group)
 
