@@ -56,6 +56,7 @@ hrs_full <- hrs_recodes %>%
          income_hh_logc1, income_hh_10k,
          actx_lt_fct,
          smoke_first_iw,
+         # soc_iso_index_pro,
          social_origins,
          stroke_ever,
          tbi_ever

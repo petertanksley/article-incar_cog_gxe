@@ -47,9 +47,9 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
   
   #format time-independent variables
   hrs_surv_ind <- tmerge(data1 = hrs_surv_ind_raw,
-                             data2 = hrs_surv_ind_raw ,
-                             id=hhidpn,
-                             event=event(cog_surv_age, cog_ever))
+                         data2 = hrs_surv_ind_raw ,
+                         id=hhidpn,
+                         event=event(cog_surv_age, cog_ever))
   
   #time-dependent
   hrs_surv_dep_raw <- hrs_surv %>% 
@@ -64,21 +64,23 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            hibp,
            income_hh_logc1,
            actx_lt_fct,
+           # soc_iso_index_pro,
            stroke_ever)
   
   #merge
   hrs_surv_dep <- tmerge(data1 = hrs_surv_ind,
-                           data2 = hrs_surv_dep_raw,
-                           id=hhidpn,
-                           alc   =tdc(study_age, alc_daily_avg_logc1),
-                           bmi   =tdc(study_age, bmi_combo),
-                           cesd  =tdc(study_age, cesd_3cat),
-                           diab  =tdc(study_age, diab),
-                           hear  =tdc(study_age, hear_sr_2cat),
-                           hibp  =tdc(study_age, hibp),
-                           income=tdc(study_age, income_hh_logc1),
-                           active=tdc(study_age, actx_lt_fct),
-                           stroke=tdc(study_age, stroke_ever)
+                         data2 = hrs_surv_dep_raw,
+                         id=hhidpn,
+                         alc   =tdc(study_age, alc_daily_avg_logc1),
+                         bmi   =tdc(study_age, bmi_combo),
+                         cesd  =tdc(study_age, cesd_3cat),
+                         diab  =tdc(study_age, diab),
+                         hear  =tdc(study_age, hear_sr_2cat),
+                         hibp  =tdc(study_age, hibp),
+                         income=tdc(study_age, income_hh_logc1),
+                         active=tdc(study_age, actx_lt_fct),
+                         # soc_iso=tdc(study_age, soc_iso_index_pro),
+                         stroke=tdc(study_age, stroke_ever)
   ) %>% 
     filter(tstart>0) #removed 11,144 rows (17%), 55,994 rows remaining
   
@@ -114,6 +116,7 @@ covars_full <- paste(c("factor(race_ethn)",
                        "factor(hibp)",
                        "scale(income)",
                        "factor(active)",
+                       # "scale(soc_iso)",
                        "factor(stroke)",
                        "strata(study)"),
                      collapse = " + ")

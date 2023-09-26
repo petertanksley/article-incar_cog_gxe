@@ -328,15 +328,46 @@ tab2_all %>%
 #   flextable::save_as_docx(path="../output/results/tab2_main_res.docx")
 
 
-#=Table 3 - Stratified results==================================================
+#=Table S2 - sensitivity=======================================================
 
-time_results <- import("../output/results/incar_time_results.rdata")
+time_results <- import_list("../output/results/incar_time_results.rdata")
+list2env(time_results, .GlobalEnv)
+rm(time_results)
 
-tab_time <- tbl_regression(time_results, exponentiate=TRUE,
-                          # include=c("factor(apoe_info99_4ct)", "factor(incar_time_3cat)"),
-                          include=-"factor(study)",
+tab_time1 <- tbl_regression(m41, exponentiate=TRUE,
+                          include=c("factor(incar_time_3cat)", "factor(apoe_info99_4ct)"),
                           label=list("factor(incar_time_3cat)"      ="Lifetime incarceration duration",
                                      "factor(apoe_info99_4ct)" = "APOE-4 allele count"))
+tab_time2 <- tbl_regression(m42, exponentiate=TRUE,
+                           include=c("factor(incar_time_3cat)", "factor(apoe_info99_4ct)"),
+                           label=list("factor(incar_time_3cat)"      ="Lifetime incarceration duration",
+                                      "factor(apoe_info99_4ct)" = "APOE-4 allele count"))
+
+tab_time_mods <- list(tab_time1, tab_time2)
+
+#write function to update gtsumamry tables
+tab_updates <- function(x){
+  x %>%
+    add_significance_stars(hide_ci = FALSE, hide_p = TRUE, hide_se = TRUE) %>%
+    remove_row_type(type = "reference") %>%
+    modify_table_body(~ .x %>%
+                        dplyr::mutate(ci = ifelse(!is.na(ci), paste0("[", ci, "]"), ""))) 
+}
+
+tab_time_mods_update <- lapply(tab_time_mods, tab_updates)
+tab_time_all <- tbl_merge(tab_time_mods_update, tab_spanner = glue("Model S2.{1:2}")) %>%
+  modify_header(label = "**Variable**") %>% 
+  modify_footnote(label ~ "The “baseline” adjustment for all models included age, sex, race/ethnicity, 
+                  high school completion, and HRS cohort. The “full” adjustment (models 2.4, 2.6) 
+                  also adjusted for stroke status, alcohol intake, BMI, depression symptoms, diabetes 
+                  status, hearing difficulty, hypertension, household income, (light) physical 
+                  activity level, smoking history, childhood financial hardship, and childhood 
+                  traumatic brain injury.") %>% 
+  modify_caption(caption = "**Table S2**. ")
+tab_time_all
+
+
+#=Table 3 - Stratified results==================================================
 
 
 strat_results <- import_list("../output/results/strat_results.rdata")
@@ -345,62 +376,58 @@ rm(strat_results)
 
 #format each table
 tab_main_reduc <- tbl_regression(m21_race_main, exponentiate=TRUE,
-                           include=c("factor(incar_ever)", "factor(apoe_info99_4ct)", 
-                                     "factor(sex)",
-                                     "factor(race_ethn)",
-                                     "factor(edu)"
+                           include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
+                                     "factor(race_ethn)"
                            ),
                            label=list("factor(incar_ever)"      = "Lifetime incarceration",
                                       "factor(apoe_info99_4ct)" = "APOE-4 allele count",
-                                      "factor(sex)"             = "Male",
-                                      "factor(race_ethn)"       = "Race/ethnicity",
-                                      "factor(edu)"             = "High school completion"
+                                      "factor(race_ethn)"       = "Race/ethnicity"
                            ))
 tab_main <- tbl_regression(m21, exponentiate=TRUE,
-                          include=c("factor(incar_ever)", "factor(apoe_info99_4ct)", 
+                          include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
                                     "factor(sex)",
-                                    "factor(race_ethn)",
                                     "factor(edu)"
                                     ),
                           label=list("factor(incar_ever)"      = "Lifetime incarceration",
                                      "factor(apoe_info99_4ct)" = "APOE-4 allele count",
                                      "factor(sex)"             = "Male",
-                                     "factor(race_ethn)"       = "Race/ethnicity",
                                      "factor(edu)"             = "High school completion"
                                      ))
 tab_sex <- tbl_regression(m21_sex, exponentiate=TRUE,
-                          include=c("factor(incar_ever)", "factor(apoe_info99_4ct)", "factor(sex)",
-                                    "factor(incar_ever):factor(sex)",
-                                    "factor(sex):factor(apoe_info99_4ct)"),
+                          include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
+                                    "factor(sex)",
+                                    "factor(sex):factor(apoe_info99_4ct)",
+                                    "factor(incar_ever):factor(sex)"),
                           label=list("factor(incar_ever)"                  = "Lifetime incarceration",
                                      "factor(apoe_info99_4ct)"             = "APOE-4 allele count",
                                      "factor(sex)"                         = "Male",
-                                     "factor(incar_ever):factor(sex)"      = "Sex*",
                                      "factor(sex):factor(apoe_info99_4ct)" = "Sex*",
-                                     "factor(sex):factor(apoe_info99_4ct)" = "Sex*"))
+                                     "factor(sex):factor(apoe_info99_4ct)" = "Sex*",
+                                     "factor(incar_ever):factor(sex)"      = "Sex*"))
 tab_race <- tbl_regression(m21_race_int, exponentiate=TRUE,
-                          include=c("factor(incar_ever)", "factor(apoe_info99_4ct)", "factor(race_ethn)",
+                          include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
+                                    "factor(race_ethn)",
                                     "factor(incar_ever):factor(race_ethn)",
                                     "factor(race_ethn):factor(apoe_info99_4ct)"),
                           label=list("factor(incar_ever)"                        = "Lifetime incarceration",
                                      "factor(apoe_info99_4ct)"                   = "APOE-4 allele count",
                                      "factor(race_ethn)"                         = "Race/ethnicity",
-                                     "factor(incar_ever):factor(race_ethn)"      = "Race/ethnicity*",
                                      "factor(race_ethn):factor(apoe_info99_4ct)" = "Race/ethnicity*",
-                                     "factor(race_ethn):factor(apoe_info99_4ct)" = "Race/ethnicity*"))
+                                     "factor(race_ethn):factor(apoe_info99_4ct)" = "Race/ethnicity*",
+                                     "factor(incar_ever):factor(race_ethn)"      = "Race/ethnicity*"))
 tab_edu <- tbl_regression(m21_edu, exponentiate=TRUE,
-                        include=c("factor(incar_ever)", "factor(apoe_info99_4ct)", "factor(edu)",
+                        include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
+                                  "factor(edu)",
                                   "factor(incar_ever):factor(edu)",
                                   "factor(edu):factor(apoe_info99_4ct)"),
                         label=list("factor(incar_ever)"                  = "Lifetime incarceration",
                                    "factor(apoe_info99_4ct)"             = "APOE-4 allele count",
                                    "factor(edu)"                         = "High school completion",
-                                   "factor(incar_ever):factor(edu)"      = "High school completion*",
                                    "factor(edu):factor(apoe_info99_4ct)" = "High school completion*",
-                                   "factor(edu):factor(apoe_info99_4ct)" = "High school completion*"))
+                                   "factor(edu):factor(apoe_info99_4ct)" = "High school completion*",
+                                   "factor(incar_ever):factor(edu)"      = "High school completion*"))
 
-tab3_mods <- list(tab_time,
-                  tab_main_reduc,
+tab3_mods <- list(tab_main_reduc,
                   tab_race,
                   tab_main,
                   tab_sex,
@@ -415,11 +442,15 @@ tab_updates <- function(x){
 }
 
 tab3_mods_update <- lapply(tab3_mods, tab_updates)
-tab3_all <- tbl_merge(tab3_mods_update, tab_spanner = glue("Model 3.{1:6}")) %>%
+tab3_all <- tbl_merge(tab3_mods_update, tab_spanner = glue("Model 3.{1:5}")) %>%
   modify_header(label = "**Variable**") %>% 
   modify_footnote(label ~ "All models also adjusted for age, sex, race/ethnicity, high school completion, and HRS cohort.") 
 tab3_all
 
+#save out table
+tab3_all %>%
+  as_gt() %>%
+  gtsave("../output/results/tab2_strat.html")
 
 #=Table S1 - Survival results==================================================
 
@@ -430,14 +461,15 @@ surv_results <- import_list("../output/results/main_results_surv_models.rdata")
 list2env(surv_results, .GlobalEnv)
 rm(surv_results)
 
-tab_cox11 <- tbl_regression(cox11, exponentiate = TRUE,
-                               include = "factor(incar_ever)Incarcerated",
-                               label = list("factor(incar_ever)Incarcerated" = "Lifetime Incarceration"))
-tab_cox12 <- tbl_regression(cox12, exponentiate = TRUE,
+
+tab_cox11 <- tbl_regression(cox12, exponentiate = TRUE,
                               include=c("factor(apoe_info99_4ct)one copy",
                                         "factor(apoe_info99_4ct)two copies"),
                               label = list("factor(apoe_info99_4ct)one copy" = "One APOE-4 allele",
                                            "factor(apoe_info99_4ct)two copies" = "Two APOE-4 alleles"))
+tab_cox12 <- tbl_regression(cox11, exponentiate = TRUE,
+                            include = "factor(incar_ever)Incarcerated",
+                            label = list("factor(incar_ever)Incarcerated" = "Lifetime Incarceration"))
 tab_cox21 <- tbl_regression(cox21, exponentiate = TRUE,
                               include=c("factor(apoe_info99_4ct)one copy",
                                         "factor(apoe_info99_4ct)two copies",
@@ -501,11 +533,15 @@ tab_mods_update <- lapply(tab_mods, tab_updates)
 
 #merge models
 tab_mods_all <- tbl_merge(tab_mods_update, tab_spanner = paste("Model S1.", 1:6, sep = "")) %>% 
-  modify_caption(glue("**Table S1.** Cox proportional hazard model of lifetime incarceration and APOE-4 genotype on first cognitive impairment.")) %>% 
-  modify_footnote(label ~ "All models also adjusted for age, sex, race/ethnicity, high school completion, and HRS cohort. 
-                  Fully adjusted models also adjusted for stroke status, alcohol intake, BMI, depression symptoms, diabetes status, 
-                  hearing difficulty, hypertension, household income, (light) physical activity level, smoking history, 
-                  childhood financial hardship, and childhood traumatic brain injury.")
+  modify_caption(glue("**Table S1.** Cox proportional hazard model of lifetime incarceration and 
+                      APOE-4 genotype on first cognitive impairment.")) %>% 
+  modify_footnote(label ~ "The “baseline” adjustment for all models included sex, 
+                  race/ethnicity, high school completion, and HRS cohort. The “full” adjustment 
+                  (models S1.4, S1.6) also adjusted for stroke status, alcohol intake, BMI, 
+                  depression symptoms, diabetes status, hearing difficulty, hypertension, 
+                  household income, (light) physical activity level, smoking history, childhood 
+                  financial hardship, and childhood traumatic brain injury.") %>% 
+  modify_header(label = "**Variable**") 
 tab_mods_all
 
 

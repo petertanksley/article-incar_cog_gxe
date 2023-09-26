@@ -14,7 +14,6 @@ incar   <- import(glue("{hrs_clean_dir}incarceration/incarceration_cleaned.rds")
 #minimal set
 demo     <- import(glue("{hrs_clean_dir}demographics/demo_cleaned.rds"))           
 apoe     <- import(glue("{hrs_clean_dir}serotonin_apoe/serotonin_apoe_clean.rds")) %>% select(hhidpn, apoe_info99_4ct)
-stroke   <- import(glue("{hrs_clean_dir}stroke/stroke_clean.rds"))   
 #full set
 alc      <- import(glue("{hrs_clean_dir}/alcohol/alcohol_clean.rds")) %>% select(hhidpn, year, alc_daily_avg)
 bmi      <- import(glue("{hrs_clean_dir}/bmi/bmi_clean.rds")) %>% select(hhidpn, year, bmi_combo)
@@ -26,7 +25,9 @@ hyper    <- import(glue("{hrs_clean_dir}/hypertension/hypertension_clean.rds"))
 income   <- import(glue("{hrs_clean_dir}income/income_clean.rds"))
 phys_act <- import(glue("{hrs_clean_dir}/physical_activity/physical_activity_clean.rds")) %>% select(hhidpn, year, actx_lt_fct)
 smoke    <- import(glue("{hrs_clean_dir}/smoke/smoke_clean.rds")) %>% select(hhidpn, smoke_first_iw) %>% distinct()
+# soc_iso  <- import(glue("{hrs_clean_dir}social_isolation/social_iso_clean.rds")) %>% select(hhidpn, year, soc_iso_index_pro) 
 soc_orig <- import(glue("{hrs_clean_dir}social_origins/social_origin_clean.rds")) %>% select(hhidpn, social_origins) 
+stroke   <- import(glue("{hrs_clean_dir}stroke/stroke_clean.rds"))   
 tbi      <- import(glue("{hrs_clean_dir}/traumatic_brain_injury/tbi_clean.rds"))
 #death
 death <- import(glue("{hrs_clean_dir}/death/death_clean.rds")) %>% select(hhidpn, year, dod_yr)
@@ -50,7 +51,9 @@ id_fct <- function(x) {
 #longitudinal dataframes: convert year to numeric 
 dfs_years <- list(cog_stat, death,
                   alc, bmi, dep, diab, hear, hyper, 
-                  income, phys_act, stroke) %>% 
+                  income, phys_act, 
+                  # soc_iso, 
+                  stroke) %>% 
   lapply(., year_num)
 
 #all dataframes: convert id for factor
@@ -85,6 +88,7 @@ hrs_merged_studyvars <- hrs_merged %>%
          income_hh,
          actx_lt_fct,
          smoke_first_iw,
+         # soc_iso_index_pro,
          social_origins,
          stroke_ever,
          tbi_ever

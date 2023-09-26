@@ -1,13 +1,15 @@
 source("0_packages.R")
 
+
 hrs_full <- import("hrs_full_analytic.rds") 
 
-#=Main analysis================================================================
 
+#=set up covariate=============================================================
 covars_min <- "factor(sex) + factor(race_ethn) + scale(age) + factor(study) + factor(edu)"
 covars_full <- "factor(sex) + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu) +
 scale(alc_daily_avg_logc1) + scale(bmi_combo) + factor(cesd_3cat) + factor(diab) + factor(hear_sr_2cat) +
-factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_first_iw) + scale(social_origins) + factor(tbi_ever)"
+factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_first_iw) + scale(soc_iso_index_pro) + 
+scale(social_origins) + factor(tbi_ever)"
 
 #set model formulas 
 m11_incar    <- formula(glue("cog_2cat_num ~ factor(incar_ever) + {covars_min} + (1|hhidpn)"))
@@ -16,6 +18,8 @@ m21_main_eff <- formula(glue("cog_2cat_num ~ factor(incar_ever) + factor(apoe_in
 m22_main_eff <- formula(glue("cog_2cat_num ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_full} + (1|hhidpn)"))
 m31_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(apoe_info99_4ct) + {covars_min}  + (1|hhidpn)"))
 m32_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(apoe_info99_4ct) + {covars_full} + (1|hhidpn)"))
+
+#=Main analysis================================================================
 
 #run models (running into convergence issues; test nAGQ=0)
 # m21      <- glmer(m21_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
@@ -31,7 +35,7 @@ m32_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(apoe_info
 
 
 # m11 <- glmer(m11_base,      data=hrs_full, family=poisson(link="log"), nAGQ = 0, control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
-m11 <- glmer(m11_incar,      data=hrs_full_nolabs, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m11 <- glmer(m11_incar,     data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 m12 <- glmer(m12_apoe,      data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 m21 <- glmer(m21_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 m22 <- glmer(m22_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
@@ -82,25 +86,27 @@ cross_incar_time
 
 #set model formulas 
 m41_main_eff <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat) + factor(apoe_info99_4ct) + {covars_min}  + (1|hhidpn)"))
-# m51_int_eff  <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat)*factor(apoe_info99_4ct) + {covars_min}  + (1|hhidpn)"))
+m42_main_eff <- formula(glue("cog_2cat_num ~ factor(incar_time_3cat) + factor(apoe_info99_4ct) + {covars_full}  + (1|hhidpn)"))
 
 #run models 
 
 m41 <- glmer(m41_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
+m42 <- glmer(m42_main_eff,  data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #export model objects
-rio::export("m41",
+rio::export(c("m41","m42"),
             "../output/results/incar_time_results.rdata")
 
 #tidy results
 res_m41 <- tidy(m41, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "model 41")
+res_m42 <- tidy(m42, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model = "model 42")
 
 
 
 
 #=sub-group analysis===========================================================
 
-#=====Crosstabs of incar, apoe, and sex/race/edu===============================
+#=====Crosstabs of incar, apoe, and sex/race/edu
 
 #sex
 cross_sex <- hrs_full %>% 
@@ -145,7 +151,7 @@ cross_comb %>%
   as_gt() %>% 
   gtsave("../output/results/tab_s3_crosstabs_sexraceedu.html")
 
-#======interaction models with minimal covariates==============================
+#======interaction models with minimal covariates
 
 #sex
 m21_sex_int <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(sex) + factor(apoe_info99_4ct)*factor(sex) + {covars_min} + (1|hhidpn)"))
