@@ -265,33 +265,38 @@ list2env(main_results, .GlobalEnv)
 rm(main_results)
 
 
-
-tab11 <- tbl_regression(m11, exponentiate=TRUE,
-                        include="factor(incar_ever)",
-                        label=list("factor(incar_ever)"="Lifetime incarceration"))
-tab12 <- tbl_regression(m12, exponentiate=TRUE,
+tab11 <- tbl_regression(m12, exponentiate=TRUE,
                         include="factor(apoe_info99_4ct)",
-                        label=list("factor(apoe_info99_4ct)"="APOE-4 allele count"))
+                        label=list("factor(apoe_info99_4ct)"="APOE-4 allele count"),
+                        intercept=TRUE)
+tab12 <- tbl_regression(m11, exponentiate=TRUE,
+                        include="factor(incar_ever)",
+                        label=list("factor(incar_ever)"="Lifetime incarceration"),
+                        intercept=TRUE)
 tab21 <- tbl_regression(m21, exponentiate=TRUE,
                         include=c("factor(incar_ever)","factor(apoe_info99_4ct)"),
                         label=list("factor(apoe_info99_4ct)"="APOE-4 allele count",
-                                   "factor(incar_ever)"="Lifetime incarceration"))
+                                   "factor(incar_ever)"="Lifetime incarceration"),
+                        intercept=TRUE)
 tab22 <- tbl_regression(m22, exponentiate=TRUE,
                         include=c("factor(incar_ever)","factor(apoe_info99_4ct)"),
                         label=list("factor(apoe_info99_4ct)"="APOE-4 allele count",
-                                   "factor(incar_ever)"="Lifetime incarceration"))
+                                   "factor(incar_ever)"="Lifetime incarceration"),
+                        intercept=TRUE)
 tab31 <- tbl_regression(m31, exponentiate=TRUE,
                         include=c("factor(incar_ever)","factor(apoe_info99_4ct)",
                                   "factor(incar_ever):factor(apoe_info99_4ct)"),
                         label=list("factor(apoe_info99_4ct)"="APOE-4 allele count",
                                    "factor(incar_ever)"="Lifetime incarceration",
-                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count"))
+                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count"),
+                        intercept=TRUE)
 tab32 <- tbl_regression(m32, exponentiate=TRUE,
                         include=c("factor(incar_ever)","factor(apoe_info99_4ct)",
                                   "factor(incar_ever):factor(apoe_info99_4ct)"),
                         label=list("factor(apoe_info99_4ct)"="APOE-4 allele count",
                                    "factor(incar_ever)"="Lifetime incarceration",
-                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count"))
+                                   "factor(incar_ever):factor(apoe_info99_4ct)"="Lifetime Incarceration*APOE-4 allele count"),
+                        intercept=TRUE)
 
 tab2_mods <- list(tab11,
                   tab12,
@@ -312,11 +317,15 @@ tab1_mods_update <- lapply(tab2_mods, tab_updates)
 
 tab2_all <- tbl_merge(tab1_mods_update, tab_spanner = paste("Model 2.", 1:6, sep = "")) %>%
   modify_header(label = "**Variable**") %>%
-  modify_caption(glue('**Table 2**. Mixed effect Poisson regression of cognitive status on APOE-4 genotype and lifetime incarceration')) %>%
-  modify_footnote(label ~ "All models also adjusted for age, sex, race/ethnicity, high school completion, and HRS cohort. 
-                  Fully adjusted models also adjusted for stroke status, alcohol intake, BMI, depression symptoms, diabetes status, 
-                  hearing difficulty, hypertension, household income, (light) physical activity level, smoking history, 
-                  childhood financial hardship, and childhood traumatic brain injury.")
+  modify_caption(glue('**Table 2**. Mixed effect Poisson regression of cognitive status on *APOE-&epsilon;4* genotype and 
+                      lifetime incarceration in the HRS 
+                      (*N<sub>Observation</sub>*={style_number(obs,big.mark=',')}; 
+                      *N<sub>Cases</sub>*={style_number(cases,big.mark=',')})')) %>%
+  modify_footnote(label ~ "The “baseline” adjustment for all models included age, sex, race/ethnicity, high school 
+                  completion, and HRS cohort. The “full” adjustment (models 2.4, 2.6) also adjusted for stroke status, 
+                  alcohol intake, BMI, depression symptoms, diabetes status, hearing difficulty, hypertension, household 
+                  income, (light) physical activity level, smoking history, childhood financial hardship, and childhood 
+                  traumatic brain injury.")
 tab2_all
 
 tab2_all %>%
@@ -377,22 +386,20 @@ rm(strat_results)
 #format each table
 tab_main_reduc <- tbl_regression(m21_race_main, exponentiate=TRUE,
                            include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
-                                     "factor(race_ethn)"
-                           ),
+                                     "factor(race_ethn)"),
                            label=list("factor(incar_ever)"      = "Lifetime incarceration",
                                       "factor(apoe_info99_4ct)" = "APOE-4 allele count",
-                                      "factor(race_ethn)"       = "Race/ethnicity"
-                           ))
+                                      "factor(race_ethn)"       = "Race/ethnicity"),
+                           intercept=TRUE)
 tab_main <- tbl_regression(m21, exponentiate=TRUE,
                           include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
                                     "factor(sex)",
-                                    "factor(edu)"
-                                    ),
+                                    "factor(edu)"),
                           label=list("factor(incar_ever)"      = "Lifetime incarceration",
                                      "factor(apoe_info99_4ct)" = "APOE-4 allele count",
                                      "factor(sex)"             = "Male",
-                                     "factor(edu)"             = "High school completion"
-                                     ))
+                                     "factor(edu)"             = "High school completion"),
+                          intercept=TRUE)
 tab_sex <- tbl_regression(m21_sex, exponentiate=TRUE,
                           include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
                                     "factor(sex)",
@@ -403,7 +410,8 @@ tab_sex <- tbl_regression(m21_sex, exponentiate=TRUE,
                                      "factor(sex)"                         = "Male",
                                      "factor(sex):factor(apoe_info99_4ct)" = "Sex*",
                                      "factor(sex):factor(apoe_info99_4ct)" = "Sex*",
-                                     "factor(incar_ever):factor(sex)"      = "Sex*"))
+                                     "factor(incar_ever):factor(sex)"      = "Sex*"),
+                          intercept=TRUE)
 tab_race <- tbl_regression(m21_race_int, exponentiate=TRUE,
                           include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
                                     "factor(race_ethn)",
@@ -414,7 +422,8 @@ tab_race <- tbl_regression(m21_race_int, exponentiate=TRUE,
                                      "factor(race_ethn)"                         = "Race/ethnicity",
                                      "factor(race_ethn):factor(apoe_info99_4ct)" = "Race/ethnicity*",
                                      "factor(race_ethn):factor(apoe_info99_4ct)" = "Race/ethnicity*",
-                                     "factor(incar_ever):factor(race_ethn)"      = "Race/ethnicity*"))
+                                     "factor(incar_ever):factor(race_ethn)"      = "Race/ethnicity*"),
+                          intercept=TRUE)
 tab_edu <- tbl_regression(m21_edu, exponentiate=TRUE,
                         include=c("factor(apoe_info99_4ct)", "factor(incar_ever)", 
                                   "factor(edu)",
@@ -425,13 +434,15 @@ tab_edu <- tbl_regression(m21_edu, exponentiate=TRUE,
                                    "factor(edu)"                         = "High school completion",
                                    "factor(edu):factor(apoe_info99_4ct)" = "High school completion*",
                                    "factor(edu):factor(apoe_info99_4ct)" = "High school completion*",
-                                   "factor(incar_ever):factor(edu)"      = "High school completion*"))
+                                   "factor(incar_ever):factor(edu)"      = "High school completion*"),
+                        intercept=TRUE)
 
 tab3_mods <- list(tab_main_reduc,
                   tab_race,
                   tab_main,
                   tab_sex,
                   tab_edu)
+
 #write function to update gtsumamry tables
 tab_updates <- function(x){
   x %>%

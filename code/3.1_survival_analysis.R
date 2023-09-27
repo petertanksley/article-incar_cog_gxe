@@ -92,7 +92,6 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
   hrs_surv_dep<- import("hrs_surv_dep.rds")
 }
 
-#=Fit Cox model================================================================
 
 #covariates lists
 
@@ -120,6 +119,10 @@ covars_full <- paste(c("factor(race_ethn)",
                        "factor(stroke)",
                        "strata(study)"),
                      collapse = " + ")
+
+
+#=Fit Cox model================================================================
+
 
 f11 <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + {covars_min}"))
 f12 <- formula(glue("Surv(tstart, tstop, event) ~ factor(apoe_info99_4ct) + {covars_min}"))
@@ -166,7 +169,36 @@ cox.zph(cox31) %>% ggcoxzph()
 cox.zph(cox32) %>% ggcoxzph()
 
 #=test-stratified models=====================================
-cox21 <- coxph(f21, data = hrs_surv_dep)
+f21_main <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_min}"))
+f21_sex  <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(sex) + factor(apoe_info99_4ct)*factor(sex) + {covars_min}"))
+f21_race <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(race_ethn) + factor(apoe_info99_4ct)*factor(race_ethn) + {covars_min}"))
+f21_edu  <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(edu) + factor(apoe_info99_4ct)*factor(edu) + {covars_min}"))
+
+cox21_main <- coxph(f21_main, data = hrs_surv_dep)
+cox21_sex <- coxph(f21_sex, data = hrs_surv_dep)
+hrs_surv_dep_race <- hrs_surv_dep %>% 
+  filter(!race_ethn %in% c("Hispanic", "Other")) %>% #removed 6,026 rows (11%), 49,968 rows remaining (cases= 9245)
+  mutate(race_ethn = fct_drop(race_ethn))
+cox21_main_reduc <- coxph(f21_main, data = hrs_surv_dep_race)
+cox21_race <- coxph(f21_race, data = hrs_surv_dep_race)
+cox21_edu <- coxph(f21_edu, data = hrs_surv_dep)
+
+export(c("cox21_main_reduc",
+         "cox21_race",
+         "cox21_main",
+         "cox21_sex",
+         "cox21_edu"), 
+       "../output/results/strat_results_surv_models.rdata")
+
+tidy(cox21_main_reduc, exponentiate=TRUE) %>% mutate(model = "m1")
+tidy(cox21_race, exponentiate=TRUE)       %>% mutate(model = "m2")
+tidy(cox21_main, exponentiate=TRUE)       %>% mutate(model = "m3")
+tidy(cox21_sex, exponentiate=TRUE)        %>% mutate(model = "m4")
+tidy(cox21_edu, exponentiate=TRUE)        %>% mutate(model = "m5")
+
+
+
+
 
 
 #=Fit and visualize basic survival curves======================================
