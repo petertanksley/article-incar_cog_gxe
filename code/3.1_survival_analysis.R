@@ -169,6 +169,26 @@ cox.zph(cox31) %>% ggcoxzph()
 cox.zph(cox32) %>% ggcoxzph()
 
 #=test-stratified models=====================================
+
+#time
+f21_time <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_time_3cat) + factor(apoe_info99_4ct) + {covars_min}"))
+f22_time <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_time_3cat) + factor(apoe_info99_4ct) + {covars_full}"))
+
+cox21_time <- coxph(f21_time, data = hrs_surv_dep)
+cox22_time <- coxph(f22_time, data = hrs_surv_dep)
+
+export(c("cox21_time", 
+         "cox22_time"),
+       "../output/results/time_results_surv_models.rdata")
+
+tidy(cox21_time, exponentiate = TRUE)
+tidy(cox22_time, exponentiate = TRUE)
+
+
+
+
+
+#demos
 f21_main <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever) + factor(apoe_info99_4ct) + {covars_min}"))
 f21_sex  <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(sex) + factor(apoe_info99_4ct)*factor(sex) + {covars_min}"))
 f21_race <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor(race_ethn) + factor(apoe_info99_4ct)*factor(race_ethn) + {covars_min}"))
