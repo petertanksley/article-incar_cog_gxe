@@ -31,7 +31,7 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
   
   #time-independent 
   hrs_surv_ind_raw <- hrs_surv %>% 
-    distinct(hhidpn, .keep_all=TRUE) %>% #removed 64,219 rows (85%), 11,365 rows remaining
+    distinct(hhidpn, .keep_all=TRUE) %>% #removed 62,243 rows (85%), 11,268 rows remaining
     select(hhidpn, study, 
            cog_surv_age, cog_first, cog_ever, 
            dod_yr, dod_age,
@@ -43,7 +43,7 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            smoke_first_iw,
            tbi_ever
     ) %>% 
-    filter(cog_surv_age>firstiw_age) #removed 221 rows (2%), 11,144 rows remaining
+    filter(cog_surv_age>firstiw_age) # removed 176 rows (2%), 11,092 rows remaining
   
   #format time-independent variables
   hrs_surv_ind <- tmerge(data1 = hrs_surv_ind_raw,
@@ -64,7 +64,7 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
            hibp,
            income_hh_logc1,
            actx_lt_fct,
-           # soc_iso_index_pro,
+           soc_iso_index_pro_intr,
            stroke_ever)
   
   #merge
@@ -79,10 +79,10 @@ if(!file.exists("hrs_surv_ind.rds") | !file.exists("hrs_surv_dep.rds")){
                          hibp  =tdc(study_age, hibp),
                          income=tdc(study_age, income_hh_logc1),
                          active=tdc(study_age, actx_lt_fct),
-                         # soc_iso=tdc(study_age, soc_iso_index_pro),
+                         soc_iso=tdc(study_age, soc_iso_index_pro_intr),
                          stroke=tdc(study_age, stroke_ever)
   ) %>% 
-    filter(tstart>0) #removed 11,144 rows (17%), 55,994 rows remaining
+    filter(tstart>0) #removed 11,092 rows (17%), 54,397 rows remaining
   
   export(hrs_surv_dep, "hrs_surv_dep.rds")
   export(hrs_surv_ind, "hrs_surv_ind.rds")
@@ -115,7 +115,7 @@ covars_full <- paste(c("factor(race_ethn)",
                        "factor(hibp)",
                        "scale(income)",
                        "factor(active)",
-                       # "scale(soc_iso)",
+                       "scale(soc_iso)",
                        "factor(stroke)",
                        "strata(study)"),
                      collapse = " + ")
@@ -197,7 +197,7 @@ f21_edu  <- formula(glue("Surv(tstart, tstop, event) ~ factor(incar_ever)*factor
 cox21_main <- coxph(f21_main, data = hrs_surv_dep)
 cox21_sex <- coxph(f21_sex, data = hrs_surv_dep)
 hrs_surv_dep_race <- hrs_surv_dep %>% 
-  filter(!race_ethn %in% c("Hispanic", "Other")) %>% #removed 6,026 rows (11%), 49,968 rows remaining (cases= 9245)
+  filter(!race_ethn %in% c("Hispanic", "Other")) %>% #removed 5,610 rows (10%), 48,787 rows remaining (cases= 8829)
   mutate(race_ethn = fct_drop(race_ethn))
 cox21_main_reduc <- coxph(f21_main, data = hrs_surv_dep_race)
 cox21_race <- coxph(f21_race, data = hrs_surv_dep_race)

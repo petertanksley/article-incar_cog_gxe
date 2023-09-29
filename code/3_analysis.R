@@ -8,7 +8,7 @@ hrs_full <- import("hrs_full_analytic.rds")
 covars_min <- "factor(sex) + factor(race_ethn) + scale(age) + factor(study) + factor(edu)"
 covars_full <- "factor(sex) + factor(race_ethn) + scale(age) + factor(stroke_ever) + factor(study) + factor(edu) +
 scale(alc_daily_avg_logc1) + scale(bmi_combo) + factor(cesd_3cat) + factor(diab) + factor(hear_sr_2cat) +
-factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_first_iw) + scale(soc_iso_index_pro) + 
+factor(hibp) + scale(income_hh_logc1) + factor(actx_lt_fct) + factor(smoke_first_iw) + scale(soc_iso_index_pro_intr) + 
 scale(social_origins) + factor(tbi_ever)"
 
 #set model formulas 
@@ -43,7 +43,8 @@ m31 <- glmer(m31_int_eff,   data=hrs_full, family=poisson(link="log"), control=g
 m32 <- glmer(m32_int_eff,   data=hrs_full, family=poisson(link="log"), control=glmerControl(optimizer="bobyqa", optCtrl=list(maxfun=2e5)))
 
 #check linear probabily model
-# lmer(m14_int_eff,   data=hrs_full) %>% broom.mixed::tidy(conf.int=TRUE) %>% view()
+# lmer(m31_int_eff,   data=hrs_full) %>% broom.mixed::tidy(conf.int=TRUE) %>% view()
+# lmer(m32_int_eff,   data=hrs_full) %>% broom.mixed::tidy(conf.int=TRUE) %>% view()
 
 rio::export(c("m11","m12","m21","m22","m31","m32"),
             "../output/results/tab3_main_results.rdata")
@@ -161,7 +162,7 @@ res_m21_sex <- tidy(m21_sex, exponentiate=TRUE, conf.int=TRUE) %>% mutate(model 
 #race (too few cases in the "other" category; dropped this category and ran analysis)
 m21_race_int     <- formula(glue("cog_2cat_num ~ factor(incar_ever)*factor(race_ethn) + factor(apoe_info99_4ct)*factor(race_ethn) + {covars_min} + (1|hhidpn)"))
 hrs_full_race <- hrs_full %>% 
-  filter(!race_ethn %in% c("Hispanic", "Other")) %>% #removed 9,102 rows (12%), 66,482 rows remaining (cases= 9819)
+  filter(!race_ethn %in% c("Hispanic", "Other")) %>% #removed 8,556 rows (12%), 64,955 rows remaining (cases= 9740)
   mutate(race_ethn = fct_drop(race_ethn))
 
 

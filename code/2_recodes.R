@@ -56,12 +56,12 @@ hrs_full <- hrs_recodes %>%
          income_hh_logc1, income_hh_10k,
          actx_lt_fct,
          smoke_first_iw,
-         # soc_iso_index_pro,
+         soc_iso_index_pro_intr,
          social_origins,
          stroke_ever,
          tbi_ever
   ) %>%
-  drop_na(-dod_yr) #removed 248,975 rows (77%), 75,584 rows remaining
+  drop_na(-dod_yr) #removed 251,048 rows (77%), 73,511 rows remaining
 
 # #check case count
 # hrs_full %>% count(cases = n_distinct(hhidpn))

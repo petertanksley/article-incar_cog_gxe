@@ -43,6 +43,7 @@ hrs_labs <- hrs %>%
          income_hh_10k,
          actx_lt_fct,
          smoke_first_iw,
+         soc_iso_index_pro_intr,
          social_origins,
          stroke_ever,
          tbi_ever) %>% 
@@ -104,6 +105,7 @@ hrs_labs <- hrs %>%
              hear_sr_2cat    = "Hearing difficulty",
              hibp            = "Hypertension",
              actx_lt_fct     = "Physical activity (light)",
+             soc_iso_index_pro_intr = "Social Isolation",
              stroke_ever     = "Stroke status"
   ) 
 
@@ -153,6 +155,7 @@ tab1_bottom <- hrs_labs %>%
          hibp,         
          actx_lt_fct,  
          stroke_ever,
+         soc_iso_index_pro_intr,
          year) %>%
   mutate(year=as_factor(year)) %>%
   # group_by(hhidpn) %>%
@@ -166,7 +169,8 @@ tab1_bottom <- hrs_labs %>%
               type = list(c(age, 
                             income_hh_10k, 
                             alc_daily_avg, 
-                            bmi_combo) ~ "continuous",
+                            bmi_combo,
+                            soc_iso_index_pro_intr) ~ "continuous",
                           c(cesd_3cat,    
                             diab,         
                             hear_sr_2cat,
@@ -197,10 +201,10 @@ tab1_combined
 #export .html table
 gtsave(as_gt(tab1_combined), "../output/results/tab1_descriptives.html")
 
-#export .docx table
-tab1_combined %>%
-  as_flex_table() %>%
-  flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
+# #export .docx table
+# tab1_combined %>%
+#   as_flex_table() %>%
+#   flextable::save_as_docx(path="../output/results/tab1_descriptives.docx")
 
 #=====get pvalues 
 #=cognitive function
@@ -212,7 +216,7 @@ cog_pval <- glmer(cog_2cat_num ~ factor(incar_ever) + (1|hhidpn),
   filter(term=="factor(incar_ever)Incarcerated") %>% 
   pull(p.value)
 # cog_pval
-# [1] 2.18628e-22
+# [1] 1.141721e-19
 
 #stroke
 strok_pval <- glmer(stroke_ever ~ factor(incar_ever) + (1|hhidpn), 
@@ -223,7 +227,7 @@ strok_pval <- glmer(stroke_ever ~ factor(incar_ever) + (1|hhidpn),
   filter(term=="factor(incar_ever)Incarcerated") %>% 
   pull(p.value)
 # strok_pval
-# [1] 0.2276284
+# [1] 0.1833498
 
 # diabetes
 diab_pval <- glmer(factor(diab) ~ factor(incar_ever) + (1|hhidpn), 
@@ -234,7 +238,7 @@ diab_pval <- glmer(factor(diab) ~ factor(incar_ever) + (1|hhidpn),
   filter(term=="factor(incar_ever)Incarcerated") %>% 
   pull(p.value)
 # diab_pval
-# [1] 0.008436289
+# [1] 0.007487651
 
 # hearing
 hear_pval <- glmer(factor(hear_sr_2cat) ~ factor(incar_ever) + (1|hhidpn), 
@@ -245,7 +249,7 @@ hear_pval <- glmer(factor(hear_sr_2cat) ~ factor(incar_ever) + (1|hhidpn),
   filter(term=="factor(incar_ever)Incarcerated") %>% 
   pull(p.value)
 # hear_pval
-# [1] 2.61667e-15
+# [1] 9.720985e-14
 
 # hypertension
 hibp_pval <- glmer(factor(hibp) ~ factor(incar_ever) + (1|hhidpn), 
@@ -256,14 +260,14 @@ hibp_pval <- glmer(factor(hibp) ~ factor(incar_ever) + (1|hhidpn),
   filter(term=="factor(incar_ever)Incarcerated") %>% 
   pull(p.value)
 # hibp_pval
-# [1] 2.945989e-05
+# [1] 9.019089e-06
 
 #continuous, time-dependent
 contin_timedep <- hrs_labs %>% 
-  select(hhidpn, incar_ever, cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo) %>% 
+  select(hhidpn, incar_ever, cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo, soc_iso_index_pro_intr) %>% 
   group_by(hhidpn) %>% 
-  mutate(across(c(cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo), ~as.numeric(.)),
-         across(c(cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo), ~mean(.))) %>% 
+  mutate(across(c(cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo, soc_iso_index_pro_intr), ~as.numeric(.)),
+         across(c(cesd_3cat, actx_lt_fct, age, income_hh_10k, alc_daily_avg, bmi_combo, soc_iso_index_pro_intr), ~mean(.))) %>% 
   distinct() %>% 
   ungroup() %>% 
   tbl_summary(include = -hhidpn,
@@ -402,7 +406,7 @@ tab3_all %>%
 
 
 
-
+#survival results
 time_res_surv <- import_list("../output/results/time_results_surv_models.rdata")
 list2env(time_res_surv, .GlobalEnv)
 rm(time_res_surv)
@@ -654,7 +658,7 @@ rm(strat_surv_results)
 
 #calculate person-years (MODIFIED)
 person_yrs_blackwhite <- hrs_surv %>% 
-  filter(race_ethn %in% c("Black", "White")) %>% #removed 6,026 rows (11%), 49,968 rows remaining
+  filter(race_ethn %in% c("Black", "White")) %>% #removed 5,610 rows (10%), 48,787 rows remaining
   group_by(hhidpn) %>% 
   summarise(age_min=min(tstart),
             age_max=max(tstop)) %>% 
