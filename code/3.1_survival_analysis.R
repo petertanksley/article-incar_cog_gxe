@@ -448,7 +448,7 @@ combined2 <- plot2 + tab2 + plot1 + tab1 +
   # plot_annotation(tag_levels = "A", tag_suffix=".") 
   theme(plot.tag = element_text(size = 24, face = "bold"))
 # combined2
-ggsave("../output/figures/survplot_combined2.tiff", combined2, width = 16, height =20, dpi = 700)
+ggsave("../output/figures/survplot_combined2.tiff", combined2, width = 16, height =18, dpi = 345)
 
 
 

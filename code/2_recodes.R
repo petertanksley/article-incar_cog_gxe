@@ -34,6 +34,8 @@ hrs_recodes <- hrs_merged %>%
   filter(!study=="LBB") %>% #removed 16,940 rows (5%), 324,559 rows remaining
   mutate(study = fct_drop(study))
 
+export(hrs_recodes, "hrs_merged_recodes.rds")
+
 #==============================================================================
 # Create analytic samples
 #=============================================================================#
@@ -65,8 +67,8 @@ hrs_full <- hrs_recodes %>%
 
 # #check case count
 # hrs_full %>% count(cases = n_distinct(hhidpn))
-# # cases     n
-# #  11365 75584
+# cases     n
+# 11268 73511
 
 
 rio::export(hrs_full, "hrs_full_analytic.rds")
